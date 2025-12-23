@@ -1,0 +1,2 @@
+hasFoundry = 1;
+hasEM = 1;

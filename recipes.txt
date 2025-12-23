@@ -1,4 +1,6 @@
 1 cog = 2 iron
 1 cog = 10 molt_iron | Foundry
 2 y_belt = 1 iron, 1 cog \ prod
+3 cable = 2 copper * EM
+2 cable = 5 molt_copp | Foundry
 1 g_circuit = 1 iron, 3 cable * EM
