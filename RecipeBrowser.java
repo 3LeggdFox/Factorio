@@ -14,21 +14,31 @@ public class RecipeBrowser
         ArrayList<Recipe> recipes = new ArrayList<Recipe>();
         for (Recipe recipe : this.recipes)
         {
-            for (Material output : recipe.output)
+            if (recipe.hasOutput(material))
             {
-                if (output.material.equalsIgnoreCase(material))
-                {
-                    recipes.add(recipe);
-                    break;
-                }
+                recipes.add(recipe);
             }
         }
         return recipes;
     }
 
-    double quantIn(String material)
+    double quantIn(String input, String output)
     {
-        
-        return 0;
+        if (input.equals(output))
+        {
+            return 1;
+        }
+        ArrayList<Recipe> recipes = findRecipes(output);
+        if (recipes.isEmpty())
+        {
+            return 0;
+        }
+        Recipe recipe = recipes.get(0);
+        double sum = 0;
+        for (Material material : recipe.input)
+        {
+            sum += quantIn(input, material.material) * material.quantity / recipe.amountOutput(output);
+        }
+        return sum;
     }
 }

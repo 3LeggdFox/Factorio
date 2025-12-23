@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.lang.StringBuilder;
 
 public class Recipe 
 {
@@ -74,5 +75,99 @@ public class Recipe
             String[] pair = out.split(" ");         // Split into quantity and material
             output.add(new Material(Double.parseDouble(pair[0]), pair[1])); // Append new Material
         }
+    }
+
+    public double amountOutput(String material)
+    {
+        for (Material output : this.output)
+        {
+            if (output.material.equals(material))
+            {
+                return output.quantity;
+            }
+        }
+        return 0;
+    }
+    
+    public boolean hasOutput(String material)
+    {
+        return amountOutput(material) != 0;
+    }
+
+    public double amountInput(String material)
+    {
+        for (Material input : this.input)
+        {
+            if (input.material.equals(material))
+            {
+                return input.quantity;
+            }
+        }
+        return 0;
+    }
+
+    public boolean hasInput(String material)
+    {
+        return amountInput(material) != 0;
+    }
+
+    public String toString()
+    {
+        StringBuilder string = new StringBuilder();
+        boolean first = true;
+
+        for (Material output : this.output)
+        {
+            if (first)
+            {
+                string.append(output.toString());
+                first = false;
+            } else
+            {
+                string.append(", " + output.toString());
+            }
+        }
+
+        string.append(" = ");
+
+        first = true;
+        for (Material input : this.input)
+        {
+            if (first)
+            {
+                string.append(input.toString());
+                first = false;
+            } else
+            {
+                string.append(", " + input.toString());
+            }
+        }
+
+        if (hasReq)
+        {  
+            string.append(", requires ");
+        } else
+        {
+            string.append(", at ");
+        }
+
+        first = true;
+        for (String station : this.stations)
+        {
+            if (first)
+            {
+                string.append(station);
+                first = false;
+            } else
+            {
+                string.append(" or " + station);
+            }
+        }
+
+        if (!canProd)
+        {
+            string.append(" \\ prod");
+        }
+        return string.toString();
     }
 }

@@ -8,4 +8,9 @@ public class Material
         this.quantity = quantity;
         this.material = material;
     }
+
+    public String toString()
+    {
+        return this.quantity + " " + this.material;
+    }
 }

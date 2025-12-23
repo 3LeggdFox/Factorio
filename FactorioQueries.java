@@ -9,8 +9,7 @@ public class FactorioQueries
     public static void main(String[] args)
     {
         RecipeBrowser recipes = initialiseBrowser();
-        ArrayList<Recipe> coppRecipes = recipes.findRecipes("cable");
-        System.out.println("Hi");
+        System.out.println(recipes.quantIn("copper", "r_circuit"));
     }
 
     static RecipeBrowser initialiseBrowser()
