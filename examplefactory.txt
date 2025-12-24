@@ -1,2 +1,3 @@
-hasFoundry = 1;
-hasEM = 1;
+hasFoundry = 1
+hasEM = 1
+cog = default

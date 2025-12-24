@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.lang.StringBuilder;
 
-public class Recipe 
+public class Recipe
 {
     ArrayList<Material> input = new ArrayList<Material>();
     ArrayList<Material> output = new ArrayList<Material>();
@@ -9,25 +9,28 @@ public class Recipe
     boolean hasReq;
     ArrayList<String> stations = new ArrayList<String>();
     String station = null;
+    String altName;
+
+    public Recipe() {}
 
     public Recipe(String line)
     {
         // Check Productivity Applicability Tag
         String[] segments = line.split("\\\\");         // Seperate productivity ability tag
-        this.canProd = segments.length == 1;              // Temp solution. Only deals with productivity
+        this.canProd = segments.length == 1;            // Temp solution. Only deals with productivity
 
         // Check For Alternate Station(s)
         String[] stations;
-        segments = segments[0].split("\\*");          // Separate alternate station
+        segments = segments[0].split("\\*");            // Separate alternate station
         if (segments.length > 1)
         {
             // Query factory file for preferable station. Otherwise ask for preference before continuing.
             /* Still needs to be implemented */
 
-            stations = segments[1].split(",");     // Split into different station options
+            stations = segments[1].split(",");          // Split into different station options
             for (String station : stations)
             {
-                this.stations.add(station.trim()); // Add to list of options
+                this.stations.add(station.trim());      // Add to list of options
             }
         }
 
@@ -38,10 +41,10 @@ public class Recipe
             this.hasReq = true;
             // Query factory file for preferable station. Otherwise ask for preference before continuing. Also check if any of the stations are unlocked
             /* Still needs to be implemented */
-            stations = segments[1].split(",");     // Split into different station options
+            stations = segments[1].split(",");          // Split into different station options
             for (String station : stations)
             {
-                this.stations.add(station.trim()); // Add to list of options
+                this.stations.add(station.trim());      // Add to list of options
             }
         } else
         {
@@ -65,6 +68,9 @@ public class Recipe
             String[] pair = inp.split(" ");         // Split into quantity and material
             input.add(new Material(Double.parseDouble(pair[0]), pair[1])); // Append new Material
         }
+
+        // Record Alternate Recipe
+        /* Still needs to be implemented */
 
         // Record Outputs
         String[] outputs = segments[0].split(",");  // Separate Outputs
@@ -126,6 +132,10 @@ public class Recipe
             {
                 string.append(", " + output.toString());
             }
+            if (!altName.equals("default"))
+            {
+                string.append("(" + altName + ")");
+            }
         }
 
         string.append(" = ");
@@ -143,12 +153,15 @@ public class Recipe
             }
         }
 
-        if (hasReq)
-        {  
-            string.append(", requires ");
-        } else
+        if (this.stations.size() > 0)
         {
-            string.append(", at ");
+            if (hasReq)
+            {  
+                string.append(" | ");
+            } else
+            {
+                string.append(" * ");
+            }
         }
 
         first = true;
@@ -160,7 +173,7 @@ public class Recipe
                 first = false;
             } else
             {
-                string.append(" or " + station);
+                string.append(", " + station);
             }
         }
 
