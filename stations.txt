@@ -1,0 +1,2 @@
+Foundry: 4 modules, 50%
+EM: 4 modules, 50%

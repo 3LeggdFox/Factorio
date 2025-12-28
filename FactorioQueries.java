@@ -8,11 +8,12 @@ public class FactorioQueries
 
     public static void main(String[] args)
     {
-        RecipeBrowser recipes = initialiseBrowser("examplefactory.txt");
+        Scanner scanInp = new Scanner(System.in);
+        RecipeBrowser recipes = initialiseBrowser("examplefactory.txt", scanInp);
         System.out.println(recipes.quantIn("copper", "r_circuit"));
     }
 
-    static RecipeBrowser initialiseBrowser(String factory)
+    static RecipeBrowser initialiseBrowser(String factory, Scanner scanInp)
     {
         try
         {
@@ -25,6 +26,15 @@ public class FactorioQueries
             }
             scanner.close();
 
+            file = new File("stations.txt");
+            scanner = new Scanner(file);
+            ArrayList<Station> stations = new ArrayList<Station>();
+            while (scanner.hasNextLine())
+            {
+                stations.add(Parser.parseStations(scanner.nextLine()));
+            }
+            scanner.close();
+
             file = new File(factory);
             scanner = new Scanner(file);
             ArrayList<Setting> settings = new ArrayList<Setting>();
@@ -34,7 +44,7 @@ public class FactorioQueries
             }
             scanner.close();
 
-            return new RecipeBrowser(recipes, settings, factory);
+            return new RecipeBrowser(recipes, settings, stations, factory, scanInp);
         } catch (FileNotFoundException e)
         {
             e.printStackTrace();

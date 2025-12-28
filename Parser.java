@@ -22,11 +22,12 @@ public class Parser
         Parser parser = new Parser(line);
         char nextChar = parser.nextChar();
 
+        // Collect Outputs
         ArrayList<Material> outputs = new ArrayList<Material>();
         String material;
         double quantity;
         String altName = "default";
-        while (true)        // Collect Outputs
+        while (true)        
         {
             quantity = parser.getNumber();
             material = parser.getWord();
@@ -43,7 +44,12 @@ public class Parser
                 break;
             }
         }
+        if (outputs.isEmpty()) // Check for syntax errors
+        {
+            System.out.println("Error: No outputs found. Impossible Recipe.");
+        }
 
+        // Collect Inputs
         parser.trim();
         nextChar = parser.increment();
         if (nextChar != '=')
@@ -52,7 +58,7 @@ public class Parser
             return null;
         }
         ArrayList<Material> inputs = new ArrayList<Material>();
-        while (true)        // Collect Inputs
+        while (true)        
         {
             quantity = parser.getNumber();
             material = parser.getWord();
@@ -63,7 +69,12 @@ public class Parser
                 break;
             }
         }
+        if (inputs.isEmpty()) // Check for syntax errors
+        {
+            System.out.println("Error: No inputs found. Impossible Recipe.");
+        }
 
+        // Collect Required Stations
         parser.trim();
         nextChar = parser.increment();
         ArrayList<String> stations = new ArrayList<String>();
@@ -71,7 +82,7 @@ public class Parser
         boolean hasReq = false;
         if (nextChar == '|')
         {
-            while (true)        // Collect Required Stations
+            while (true)        
             {
                 station = parser.getWord();
                 stations.add(station);
@@ -86,9 +97,10 @@ public class Parser
             nextChar = parser.nextChar();
         }
 
+        // Collect Alternate Stations
         if (nextChar == '*')
         {
-            while (true)        // Collect Alternate Stations
+            while (true)        
             {
                 station = parser.getWord();
                 stations.add(station);
@@ -102,7 +114,8 @@ public class Parser
             nextChar = parser.nextChar();
         }
         
-        if (nextChar == '\\') // Check if can use production modules
+        // Check if can use production modules
+        if (nextChar == '\\') 
         {
             recipe.canProd = false;
         } else 
@@ -133,6 +146,35 @@ public class Parser
         return new Setting(topic, setting);
     }
 
+    public static Station parseStations(String line)
+    {
+        Parser parser = new Parser(line);
+        String station_name = parser.getWord();
+        if (parser.increment() != ':')
+        {
+            System.out.println("Error: Expected \':\' after station name.");
+            return null;
+        }
+        int modules = (int) parser.getNumber();
+        if (!parser.getWord().equals("modules"))
+        {
+            System.out.println("Error: Expected \'modules\' after number of modules. This field should follow station name.");
+            return null;
+        }
+        if (parser.increment() != ',')
+        {
+            System.out.println("Error: Expected \',\' after modules.");
+            return null;
+        }
+        double productivity_bonus = parser.getNumber();
+        if (parser.increment() != '%')
+        {
+            System.out.println("Error: Expected \'%\' after productivity bonus.");
+            return null;
+        }
+        return new Station(station_name, modules, productivity_bonus);
+    }
+
     public boolean isWord()
     {
         if (line.length() <= position)
@@ -150,7 +192,7 @@ public class Parser
             return false;
         }
         char character = line.charAt(position);
-        return (character >= '0' && character <= '9');
+        return (character >= '0' && character <= '9') || character == '.';
     }
 
     public String getWord()
@@ -172,8 +214,18 @@ public class Parser
     {
         trim();
         int initPos = position;
+        int decimals = 0;
         while (isNumber())
         {
+            if (line.charAt(position) == '.')
+            {
+                decimals++;
+                if (decimals == 2)
+                {
+                    System.out.println("Error: Multiple decimal points in single number.");
+                    return Double.parseDouble(line.substring(initPos, position));
+                }
+            }
             position++;
         }
         if (initPos == position)

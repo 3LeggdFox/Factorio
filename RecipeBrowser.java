@@ -7,15 +7,22 @@ public class RecipeBrowser
 {
     ArrayList<Recipe> recipes;
     ArrayList<Setting> settings;
+    ArrayList<Station> stations;
     String factory;
     Scanner scanner;
     
-    public RecipeBrowser(ArrayList<Recipe> recipes, ArrayList<Setting> settings, String factory)
+    public RecipeBrowser(ArrayList<Recipe> recipes, ArrayList<Setting> settings, ArrayList<Station> stations, String factory)
+    {
+        this(recipes, settings, stations, factory, new Scanner(System.in));
+    }
+
+    public RecipeBrowser(ArrayList<Recipe> recipes, ArrayList<Setting> settings, ArrayList<Station> stations, String factory, Scanner scanner)
     {
         this.recipes = recipes;
         this.settings = settings;
+        this.stations = stations;
         this.factory = factory;
-        this.scanner = new Scanner(System.in);
+        this.scanner = scanner;
     }
 
     public ArrayList<Recipe> findRecipes(String material)
@@ -31,6 +38,24 @@ public class RecipeBrowser
         return recipes;
     }
 
+    public <T> int giveOptions(Iterable<T> list)
+    {
+        return giveOptions("Decision must be made between:", list);
+    }
+
+    public <T> int giveOptions(String heading, Iterable<T> list)
+    {
+        System.out.println(heading);
+        int counter = 0;
+        for (T element : list)
+        {
+            System.out.print(counter + ": ");
+            System.out.println(element);
+            counter++;
+        }
+        return counter;
+    }
+
     public double quantIn(String input, String output)
     {
         if (input.equals(output))
@@ -42,54 +67,11 @@ public class RecipeBrowser
         {
             return 0;
         }
-        Recipe recipe = null;
+        
+        Recipe recipe;
         if (recipes.size() > 1)
         { 
-            for (Setting setting : settings)
-            {
-                if (setting.topic.equals(output))
-                {
-                    for (Recipe r : recipes)
-                    {
-                        if (r.altName.equals(setting.setting))
-                        {
-                            recipe = r;
-                        } else if (r.altName == null && setting.setting.equals("default"))
-                        {
-                            recipe = r;
-                        }
-                    }
-                }
-            }
-            if (recipe == null)
-            {
-                System.out.println("Decision must be made between:");
-                int counter = 0;
-                for (Recipe r : recipes)
-                {
-                    System.out.print(counter + ": ");
-                    System.out.println(r);
-                    counter++;
-                }
-                int userIn = scanner.nextInt();
-                while (userIn < 0 && userIn >= counter)
-                {
-                    System.out.println("Please select a valid option (in the range [0," + (counter-1) + "].");
-                }
-                counter = 0;
-                for (Recipe r: recipes)
-                {
-                    if (counter == userIn)
-                    {
-                        settings.add(new Setting(output, r.altName));
-                        addLastSetting();
-                        recipe = r;
-                        break;
-                    }
-                    counter++;
-                }
-                
-            }
+            recipe = pickRecipe(output, recipes);
         } else 
         {
             recipe = recipes.get(0);
@@ -100,6 +82,52 @@ public class RecipeBrowser
             sum += quantIn(input, material.material) * material.quantity / recipe.amountOutput(output);
         }
         return sum;
+    }
+
+    public Recipe pickRecipe(String output, ArrayList<Recipe> recipes) {
+        Setting setting = findSetting(output);
+        Recipe recipe = null;
+        if (setting == null) 
+        {
+            int counter = giveOptions(recipes);
+            int userIn = getUserInt(0, counter);
+            recipe = recipes.get(userIn);
+            settings.add(new Setting(output, recipe.altName));
+            addLastSetting();
+        } else
+        {
+            for (Recipe r : recipes)
+            {
+                if (r.altName.equals(setting.setting) || (r.altName == null && setting.setting.equals("default")))
+                {
+                    recipe = r;
+                    break;
+                }
+            }
+        }
+        return recipe;
+    }
+
+    public int getUserInt(int min, int max) 
+    {
+        int userIn = scanner.nextInt();
+        while (userIn < min && userIn >= max)
+        {
+            System.out.println("Please select a valid option (in the range [" + min + "," + (max-1) + "]).");
+        }
+        return userIn;
+    }
+
+    public Setting findSetting(String topic)
+    {
+        for (Setting setting : this.settings)
+        {
+            if (setting.topic.equals(topic))
+            {
+                return setting;
+            }
+        }
+        return null;
     }
 
     public void addLastSetting()
