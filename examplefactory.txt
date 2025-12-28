@@ -1,3 +1,9 @@
 hasFoundry = 1
 hasEM = 1
+hasRefinery = 1
+hasBioChamber = 1
 cog = default
+hasAssembly1 = 1
+hasAssembly2 = 1
+hasAssembly3 = 0
+cable = default

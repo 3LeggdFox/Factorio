@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
@@ -28,19 +29,21 @@ public class FactorioQueries
 
             file = new File("stations.txt");
             scanner = new Scanner(file);
-            ArrayList<Station> stations = new ArrayList<Station>();
+            HashMap<String, Station> stations = new HashMap<String, Station>();
             while (scanner.hasNextLine())
             {
-                stations.add(Parser.parseStations(scanner.nextLine()));
+                Station station = Parser.parseStations(scanner.nextLine());
+                stations.put(station.name, station);  // ();
             }
             scanner.close();
 
             file = new File(factory);
             scanner = new Scanner(file);
-            ArrayList<Setting> settings = new ArrayList<Setting>();
+            HashMap<String, Setting> settings = new HashMap<String,Setting>();
             while (scanner.hasNextLine())
             {
-                settings.add(Parser.parseFactory(scanner.nextLine()));
+                Setting setting = Parser.parseSettings(scanner.nextLine());
+                settings.put(setting.topic, setting);
             }
             scanner.close();
 

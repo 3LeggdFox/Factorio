@@ -46,7 +46,7 @@ public class Parser
         }
         if (outputs.isEmpty()) // Check for syntax errors
         {
-            System.out.println("Error: No outputs found. Impossible Recipe.");
+            System.err.println("Error: No outputs found. Impossible Recipe.");
         }
 
         // Collect Inputs
@@ -54,7 +54,7 @@ public class Parser
         nextChar = parser.increment();
         if (nextChar != '=')
         {
-            System.out.println("Error: Recipe format does not have \'=\' where expected.");
+            System.err.println("Error: Recipe format does not have \'=\' where expected.");
             return null;
         }
         ArrayList<Material> inputs = new ArrayList<Material>();
@@ -71,7 +71,7 @@ public class Parser
         }
         if (inputs.isEmpty()) // Check for syntax errors
         {
-            System.out.println("Error: No inputs found. Impossible Recipe.");
+            System.err.println("Error: No inputs found. Impossible Recipe.");
         }
 
         // Collect Required Stations
@@ -131,7 +131,7 @@ public class Parser
         return recipe;
     }
 
-    public static Setting parseFactory(String line)
+    public static Setting parseSettings(String line)
     {
         Parser parser = new Parser(line);
         String topic = parser.getWord();
@@ -139,7 +139,8 @@ public class Parser
         char charAt = parser.increment();
         if (charAt != '=')
         {
-            System.out.println("Error: Recipe format does not have \'=\' where expected.");
+            System.err.println("Error: Recipe format does not have \'=\' where expected.");
+            System.err.println("Line: " + line);
             return null;
         }
         String setting = parser.getNext();
@@ -152,27 +153,38 @@ public class Parser
         String station_name = parser.getWord();
         if (parser.increment() != ':')
         {
-            System.out.println("Error: Expected \':\' after station name.");
+            System.err.println("Error: Expected \':\' after station name.");
             return null;
         }
         int modules = (int) parser.getNumber();
         if (!parser.getWord().equals("modules"))
         {
-            System.out.println("Error: Expected \'modules\' after number of modules. This field should follow station name.");
+            System.err.println("Error: Expected \'modules\' after number of modules. This field should follow station name.");
             return null;
         }
         if (parser.increment() != ',')
         {
-            System.out.println("Error: Expected \',\' after modules.");
+            System.err.println("Error: Expected \',\' after modules.");
             return null;
         }
         double productivity_bonus = parser.getNumber();
         if (parser.increment() != '%')
         {
-            System.out.println("Error: Expected \'%\' after productivity bonus.");
+            System.err.println("Error: Expected \'%\' after productivity bonus.");
             return null;
         }
-        return new Station(station_name, modules, productivity_bonus);
+        if (parser.increment() != ',')
+        {
+            System.err.println("Error: Expected \',\' after modules.");
+            return null;
+        }
+        int priority = (int) parser.getNumber();
+        if (!parser.getWord().equals("prio"))
+        {
+            System.err.println("Error: Expected \'prio\' after productivity bonus.");
+            return null;
+        }
+        return new Station(station_name, modules, productivity_bonus, priority);
     }
 
     public boolean isWord()
@@ -182,7 +194,7 @@ public class Parser
             return false;
         }
         char character = line.charAt(position);
-        return (character >= 'a' && character <= 'z') || (character >= 'A' && character <= 'Z') || character == '_';
+        return (character >= 'a' && character <= 'z') || (character >= 'A' && character <= 'Z') || character == '_' || isNumber();
     }
 
     public boolean isNumber()
@@ -205,7 +217,7 @@ public class Parser
         }
         if (initPos == position)
         {
-            System.out.println("Error: Either finding word at end of String, or finding word on non-word char.");
+            System.err.println("Error: Either finding word at end of String, or finding word on non-word char.");
         }
         return line.substring(initPos, position);
     }
@@ -222,7 +234,7 @@ public class Parser
                 decimals++;
                 if (decimals == 2)
                 {
-                    System.out.println("Error: Multiple decimal points in single number.");
+                    System.err.println("Error: Multiple decimal points in single number.");
                     return Double.parseDouble(line.substring(initPos, position));
                 }
             }
@@ -230,7 +242,7 @@ public class Parser
         }
         if (initPos == position)
         {
-            System.out.println("Error: Either finding number at end of String, or finding number on non-number char.");
+            System.err.println("Error: Either finding number at end of String, or finding number on non-number char.");
         }
         return Double.parseDouble(line.substring(initPos, position));
     }
@@ -261,7 +273,7 @@ public class Parser
             position++;
             if (line.length() <= position)
             {
-                System.out.println("Error: Trying to trim end of String.");
+                System.err.println("Error: Trying to trim end of String.");
                 return;
             }
         }
@@ -284,7 +296,7 @@ public class Parser
             position++;
             if (line.length() <= position)
             {
-                System.out.println("Error: Trying to trim end of String.");
+                System.err.println("Error: Trying to trim end of String.");
                 return;
             }
         }

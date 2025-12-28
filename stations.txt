@@ -1,2 +1,5 @@
-Foundry: 4 modules, 50%
-EM: 4 modules, 50%
+Assembly1: 0 modules, 0%, 1 prio
+Assembly2: 2 modules, 0%, 2 prio
+Assembly2: 4 modules, 0%, 3 prio
+Foundry: 4 modules, 50%, 4 prio
+EM: 4 modules, 50%, 4 prio

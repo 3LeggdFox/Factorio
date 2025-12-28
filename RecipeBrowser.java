@@ -2,21 +2,22 @@ import java.util.ArrayList;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
+import java.util.HashMap;
 
 public class RecipeBrowser 
 {
     ArrayList<Recipe> recipes;
-    ArrayList<Setting> settings;
-    ArrayList<Station> stations;
+    HashMap<String, Setting> settings;
     String factory;
     Scanner scanner;
+    HashMap<String, Station> stations;
     
-    public RecipeBrowser(ArrayList<Recipe> recipes, ArrayList<Setting> settings, ArrayList<Station> stations, String factory)
+    public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings, HashMap<String, Station> stations, String factory)
     {
         this(recipes, settings, stations, factory, new Scanner(System.in));
     }
 
-    public RecipeBrowser(ArrayList<Recipe> recipes, ArrayList<Setting> settings, ArrayList<Station> stations, String factory, Scanner scanner)
+    public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings, HashMap<String, Station> stations, String factory, Scanner scanner)
     {
         this.recipes = recipes;
         this.settings = settings;
@@ -56,6 +57,25 @@ public class RecipeBrowser
         return counter;
     }
 
+    public int getUserInt(int min, int max) 
+    {
+        int userIn = scanner.nextInt();
+        while (userIn < min && userIn >= max)
+        {
+            System.out.println("Please select a valid option (in the range [" + min + "," + (max-1) + "]).");
+            userIn = scanner.nextInt();
+        }
+        return userIn;
+    }
+
+    public int hasStation(String station)
+    {
+        System.out.println("Does this factory use " + station + "?");
+        System.out.println("0: No.");
+        System.out.println("1: Yes.");
+        return getUserInt(0, 1);
+    }
+
     public double quantIn(String input, String output)
     {
         if (input.equals(output))
@@ -72,28 +92,30 @@ public class RecipeBrowser
         if (recipes.size() > 1)
         { 
             recipe = pickRecipe(output, recipes);
+
         } else 
         {
             recipe = recipes.get(0);
         }
+        Station station = pickStation(recipe);
         double sum = 0;
         for (Material material : recipe.input)
         {
-            sum += quantIn(input, material.material) * material.quantity / recipe.amountOutput(output);
+            sum += quantIn(input, material.material) * material.quantity / (recipe.amountOutput(output) * station.getProd());
         }
         return sum;
     }
 
-    public Recipe pickRecipe(String output, ArrayList<Recipe> recipes) {
-        Setting setting = findSetting(output);
+    public Recipe pickRecipe(String output, ArrayList<Recipe> recipes) 
+    {
+        Setting setting = settings.get(output);
         Recipe recipe = null;
         if (setting == null) 
         {
             int counter = giveOptions(recipes);
             int userIn = getUserInt(0, counter);
             recipe = recipes.get(userIn);
-            settings.add(new Setting(output, recipe.altName));
-            addLastSetting();
+            addNewSetting(output, recipe.altName);
         } else
         {
             for (Recipe r : recipes)
@@ -108,34 +130,53 @@ public class RecipeBrowser
         return recipe;
     }
 
-    public int getUserInt(int min, int max) 
+    public Station pickStation(Recipe recipe)
     {
-        int userIn = scanner.nextInt();
-        while (userIn < min && userIn >= max)
+        Station station = null;
+        int highestPrio = -1;
+        ArrayList<String> allowedStations = (ArrayList<String>) recipe.stations.clone();
+        if (!recipe.hasReq)
         {
-            System.out.println("Please select a valid option (in the range [" + min + "," + (max-1) + "]).");
+            allowedStations.add("Assembly1");
+            allowedStations.add("Assembly2");
+            allowedStations.add("Assembly3");
         }
-        return userIn;
-    }
-
-    public Setting findSetting(String topic)
-    {
-        for (Setting setting : this.settings)
+        for (String station_name : allowedStations)
         {
-            if (setting.topic.equals(topic))
+            String setting_name = "has" + station_name;
+            Setting setting = settings.get(setting_name);
+            if (setting == null)
             {
-                return setting;
+                addNewSetting(setting_name, Integer.toString(hasStation(station_name)));
+                setting = settings.get(setting_name);
             }
+            if (setting.setting.equals("1"))
+            {
+                Station searchStation = stations.get(station_name);
+                if (searchStation == null)
+                {
+                    System.err.println("Error: Recipe uses station not found in station.txt.");
+                    return null;
+                }
+                if (searchStation.priority > highestPrio)
+                {
+                    station = searchStation;
+                    highestPrio = searchStation.priority;
+                }
+            }
+            
         }
-        return null;
+        return station;
     }
 
-    public void addLastSetting()
+    public void addNewSetting(String topic, String setting_name)
     {
+        Setting setting = new Setting(topic, setting_name);
+        settings.put(setting.topic, setting);
         try (FileWriter writer = new FileWriter(factory, true))
         {
             writer.write("\n");
-            writer.write(settings.get(settings.size()-1).toString());
+            writer.write(setting.toString());
         } catch (IOException e)
         {
             e.printStackTrace();
