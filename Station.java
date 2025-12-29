@@ -18,8 +18,10 @@ public class Station
         this.priority = priority;
     }
 
-    public double getProd()
+    public double getProd(int moduleLevel)
     {
-        return 1 + productivity_bonus/100;
+        int[] percentages = {0, 4, 6, 10};
+        int percentage = percentages[moduleLevel] * modules;
+        return 1 + (percentage + productivity_bonus)/100;
     }
 }

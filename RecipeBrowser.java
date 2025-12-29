@@ -76,7 +76,17 @@ public class RecipeBrowser
         return getUserInt(0, 1);
     }
 
-    public double quantIn(String input, String output)
+    public int moduleLevel(String moduleType)
+    {
+        System.out.println("What level of " + moduleType + " module does this factory have?");
+        System.out.println("0: None.");
+        System.out.println("1: Level 1.");
+        System.out.println("2: Level 2.");
+        System.out.println("3: Level 3.");
+        return getUserInt(0, 3);
+    }
+
+    public double quantIn(String input, String output) throws InternalReferenceException
     {
         if (input.equals(output))
         {
@@ -101,7 +111,7 @@ public class RecipeBrowser
         double sum = 0;
         for (Material material : recipe.input)
         {
-            sum += quantIn(input, material.material) * material.quantity / (recipe.amountOutput(output) * station.getProd());
+            sum += quantIn(input, material.material) * material.quantity / (recipe.amountOutput(output) * getProd(station));
         }
         return sum;
     }
@@ -115,7 +125,7 @@ public class RecipeBrowser
             int counter = giveOptions(recipes);
             int userIn = getUserInt(0, counter);
             recipe = recipes.get(userIn);
-            addNewSetting(output, recipe.altName);
+            addNewSetting(new Setting(output, recipe.altName));
         } else
         {
             for (Recipe r : recipes)
@@ -130,7 +140,7 @@ public class RecipeBrowser
         return recipe;
     }
 
-    public Station pickStation(Recipe recipe)
+    public Station pickStation(Recipe recipe) throws InternalReferenceException
     {
         Station station = null;
         int highestPrio = -1;
@@ -147,16 +157,15 @@ public class RecipeBrowser
             Setting setting = settings.get(setting_name);
             if (setting == null)
             {
-                addNewSetting(setting_name, Integer.toString(hasStation(station_name)));
-                setting = settings.get(setting_name);
+                setting = new Setting(setting_name, Integer.toString(hasStation(station_name)));
+                addNewSetting(setting);
             }
             if (setting.setting.equals("1"))
             {
                 Station searchStation = stations.get(station_name);
                 if (searchStation == null)
                 {
-                    System.err.println("Error: Recipe uses station not found in station.txt.");
-                    return null;
+                    throw new InternalReferenceException("Error: Recipe uses station not found in station.txt.", searchStation);
                 }
                 if (searchStation.priority > highestPrio)
                 {
@@ -169,9 +178,20 @@ public class RecipeBrowser
         return station;
     }
 
-    public void addNewSetting(String topic, String setting_name)
+    public double getProd(Station station)
     {
-        Setting setting = new Setting(topic, setting_name);
+        String moduleString = "prodModLevel";
+        Setting moduleSetting = settings.get(moduleString);
+        if (moduleSetting == null)
+        {
+            moduleSetting = new Setting(moduleString, Integer.toString(moduleLevel("production")));
+            addNewSetting(moduleSetting);
+        }
+        return station.getProd(Integer.parseInt(moduleSetting.setting));
+    }
+
+    public void addNewSetting(Setting setting)
+    {
         settings.put(setting.topic, setting);
         try (FileWriter writer = new FileWriter(factory, true))
         {
@@ -181,5 +201,22 @@ public class RecipeBrowser
         {
             e.printStackTrace();
         }
+    }
+}
+
+class InternalReferenceException extends Exception
+{
+    Station searchStationName;
+    public InternalReferenceException(String message, Station searchStationName)
+    {
+        super(message);
+        this.searchStationName = searchStationName;
+    }
+
+    public String getMessage()
+    {
+        StringBuilder builder = new StringBuilder(super.getMessage());
+        builder.append("Searched for '" + searchStationName + "'.");
+        return builder.toString();
     }
 }

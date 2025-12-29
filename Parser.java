@@ -5,18 +5,18 @@ public class Parser
     int position;
     String line;
 
-    public Parser(String line)
+    private Parser(String line)
     {
         this(0, line);
     }
 
-    public Parser(int position, String line)
+    private Parser(int position, String line)
     {
         this.position = position;
         this.line = line;
     }
 
-    public static Recipe parseRecipe(String line)
+    public static Recipe parseRecipe(String line) throws ParsingException
     {
         Recipe recipe = new Recipe();
         Parser parser = new Parser(line);
@@ -46,7 +46,7 @@ public class Parser
         }
         if (outputs.isEmpty()) // Check for syntax errors
         {
-            System.err.println("Error: No outputs found. Impossible Recipe.");
+            throw new ParsingException("Error: No outputs found. Impossible Recipe.", line, parser.position);
         }
 
         // Collect Inputs
@@ -54,8 +54,7 @@ public class Parser
         nextChar = parser.increment();
         if (nextChar != '=')
         {
-            System.err.println("Error: Recipe format does not have \'=\' where expected.");
-            return null;
+            throw new ParsingException("Error: Recipe format does not have \'=\' where expected.", line, parser.position-1);
         }
         ArrayList<Material> inputs = new ArrayList<Material>();
         while (true)        
@@ -71,7 +70,7 @@ public class Parser
         }
         if (inputs.isEmpty()) // Check for syntax errors
         {
-            System.err.println("Error: No inputs found. Impossible Recipe.");
+            throw new ParsingException("Error: No inputs found. Impossible Recipe.", line, parser.position);
         }
 
         // Collect Required Stations
@@ -131,7 +130,7 @@ public class Parser
         return recipe;
     }
 
-    public static Setting parseSettings(String line)
+    public static Setting parseSettings(String line) throws ParsingException
     {
         Parser parser = new Parser(line);
         String topic = parser.getWord();
@@ -139,55 +138,29 @@ public class Parser
         char charAt = parser.increment();
         if (charAt != '=')
         {
-            System.err.println("Error: Recipe format does not have \'=\' where expected.");
-            System.err.println("Line: " + line);
-            return null;
+            throw new ParsingException("Error: Recipe format does not have \'=\' where expected.", line, parser.position-1);
         }
         String setting = parser.getNext();
         return new Setting(topic, setting);
     }
 
-    public static Station parseStations(String line)
+    public static Station parseStations(String line) throws ParsingException
     {
         Parser parser = new Parser(line);
         String station_name = parser.getWord();
-        if (parser.increment() != ':')
-        {
-            System.err.println("Error: Expected \':\' after station name.");
-            return null;
-        }
+        parser.eat(':');
         int modules = (int) parser.getNumber();
-        if (!parser.getWord().equals("modules"))
-        {
-            System.err.println("Error: Expected \'modules\' after number of modules. This field should follow station name.");
-            return null;
-        }
-        if (parser.increment() != ',')
-        {
-            System.err.println("Error: Expected \',\' after modules.");
-            return null;
-        }
+        parser.eatWord("modules");
+        parser.eat(',');
         double productivity_bonus = parser.getNumber();
-        if (parser.increment() != '%')
-        {
-            System.err.println("Error: Expected \'%\' after productivity bonus.");
-            return null;
-        }
-        if (parser.increment() != ',')
-        {
-            System.err.println("Error: Expected \',\' after modules.");
-            return null;
-        }
+        parser.eat('%');
+        parser.eat(',');
         int priority = (int) parser.getNumber();
-        if (!parser.getWord().equals("prio"))
-        {
-            System.err.println("Error: Expected \'prio\' after productivity bonus.");
-            return null;
-        }
+        parser.eatWord("prio");
         return new Station(station_name, modules, productivity_bonus, priority);
     }
 
-    public boolean isWord()
+    private boolean isWord()
     {
         if (line.length() <= position)
         {
@@ -197,7 +170,7 @@ public class Parser
         return (character >= 'a' && character <= 'z') || (character >= 'A' && character <= 'Z') || character == '_' || isNumber();
     }
 
-    public boolean isNumber()
+    private boolean isNumber()
     {
         if (line.length() <= position)
         {
@@ -207,7 +180,7 @@ public class Parser
         return (character >= '0' && character <= '9') || character == '.';
     }
 
-    public String getWord()
+    private String getWord() throws ParsingException
     {
         trim();
         int initPos = position;
@@ -217,12 +190,12 @@ public class Parser
         }
         if (initPos == position)
         {
-            System.err.println("Error: Either finding word at end of String, or finding word on non-word char.");
+            throw new ParsingException("Error: Either finding word at end of String, or finding word on non-word char.", line, position);
         }
         return line.substring(initPos, position);
     }
 
-    public double getNumber()
+    private double getNumber() throws ParsingException
     {
         trim();
         int initPos = position;
@@ -234,20 +207,19 @@ public class Parser
                 decimals++;
                 if (decimals == 2)
                 {
-                    System.err.println("Error: Multiple decimal points in single number.");
-                    return Double.parseDouble(line.substring(initPos, position));
+                    throw new ParsingException("Error: Multiple decimal points in single number.", line, position);
                 }
             }
             position++;
         }
         if (initPos == position)
         {
-            System.err.println("Error: Either finding number at end of String, or finding number on non-number char.");
+            throw new ParsingException("Error: Either finding number at end of String, or finding number on non-number char.", line, position);
         }
         return Double.parseDouble(line.substring(initPos, position));
     }
 
-    public String getNext()
+    private String getNext() throws ParsingException
     {
         trim();
         int initPos = position;
@@ -257,30 +229,21 @@ public class Parser
         }
         if (initPos == position)
         {
-            System.out.println("Error: Either finding word/number at end of String, or finding word/number on non-word/number char.");
+            throw new ParsingException("Error: Either finding word/number at end of String, or finding word/number on non-word/number char.", line, position);
         }
         return line.substring(initPos, position);
     }
 
-    public void trim()
+    private void trim()
     {
-        if (line.length() <= position)
-        {
-            return;
-        }
-        while (line.charAt(position) == ' ')
+        while (line.length() > position && line.charAt(position) == ' ')
         {
             position++;
-            if (line.length() <= position)
-            {
-                System.err.println("Error: Trying to trim end of String.");
-                return;
-            }
         }
         return;
     }
 
-    public char increment()
+    private char increment()
     {
         if (line.length() <= position)
         {
@@ -289,26 +252,57 @@ public class Parser
         return line.charAt(position++);
     }
 
-    public void gotoChar(char character)
+    private void eat(char expected) throws ParsingException
     {
-        while(line.charAt(position) != character)
+        if (line.length() <= position)
         {
-            position++;
-            if (line.length() <= position)
-            {
-                System.err.println("Error: Trying to trim end of String.");
-                return;
-            }
+            throw new ParsingException("Error: Trying to eat past end of string.", line, position);
+        }
+        if (expected != line.charAt(position++))
+        {
+            throw new ParsingException("Error: Expected '" + expected + "', found '" + line.charAt(position-1) + "'.", line, position-1);
         }
         return;
     }
 
-    public char nextChar()
+    private void eatWord(String expected) throws ParsingException
+    {
+        String word = getWord();
+        if (!expected.equals(word))
+        {
+            throw new ParsingException("Error: Expected '" + expected + "' found '" + word + "'.", line, position-1);
+        }
+    }
+
+    private char nextChar()
     {
         if (line.length() <= position)
         {
             return 0;
         }
         return line.charAt(position);
+    }
+}
+
+class ParsingException extends Exception
+{
+    String offender;
+    int position; 
+
+    public ParsingException(String message, String offender, int position)
+    {
+        super(message);
+        this.offender = offender;
+        this.position = position;
+    }
+
+    public String getMessage()
+    {
+        StringBuilder builder = new StringBuilder(super.getMessage());
+        builder.append("\n" + offender + "\n");
+        char[] positionString = " ".repeat(offender.length()).toCharArray();
+        positionString[position] = '^';
+        builder.append(positionString);
+        return builder.toString();
     }
 }

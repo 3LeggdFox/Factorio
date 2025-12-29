@@ -11,7 +11,14 @@ public class FactorioQueries
     {
         Scanner scanInp = new Scanner(System.in);
         RecipeBrowser recipes = initialiseBrowser("examplefactory.txt", scanInp);
-        System.out.println(recipes.quantIn("copper", "r_circuit"));
+        try 
+        {
+            System.out.println(recipes.quantIn("copper", "r_circuit"));
+        } catch (InternalReferenceException e)
+        {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
     }
 
     static RecipeBrowser initialiseBrowser(String factory, Scanner scanInp)
@@ -33,7 +40,7 @@ public class FactorioQueries
             while (scanner.hasNextLine())
             {
                 Station station = Parser.parseStations(scanner.nextLine());
-                stations.put(station.name, station);  // ();
+                stations.put(station.name, station);
             }
             scanner.close();
 
@@ -50,8 +57,15 @@ public class FactorioQueries
             return new RecipeBrowser(recipes, settings, stations, factory, scanInp);
         } catch (FileNotFoundException e)
         {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        } catch (ParsingException e)
+        {
             e.printStackTrace();
+            System.err.println(e.getMessage());
+            System.exit(1);
         }
+        System.err.println("Error: This should be unreachable.");
         return null;
     }
 }

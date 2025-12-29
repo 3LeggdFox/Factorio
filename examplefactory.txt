@@ -7,3 +7,4 @@ hasAssembly1 = 1
 hasAssembly2 = 1
 hasAssembly3 = 0
 cable = default
+prodModLevel = 3
