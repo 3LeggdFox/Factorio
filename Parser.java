@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Parser
 {
@@ -158,6 +159,30 @@ public class Parser
         int priority = (int) parser.getNumber();
         parser.eatWord("prio");
         return new Station(station_name, modules, productivity_bonus, priority);
+    }
+
+    public static Query parseQuery(String line, HashMap<String, Integer> allMaterials) throws ParsingException
+    {
+        Parser parser = new Parser(line);
+        String firstWord = parser.getWord();
+        boolean verbose = firstWord.equals("verbose");
+        if (verbose)
+        {
+            firstWord = parser.getWord();
+        }
+        switch (firstWord)
+        {
+            case "get":
+                String input = parser.getWord();
+                parser.eatWord("in");
+                String output = parser.getWord();
+                return new QuantInQuery(input, output, verbose);
+            case "exit":
+                System.out.println("Cheers.");
+                System.exit(0);
+            default:
+                throw new ParsingException("Error: Command not recognised.", line, parser.position-1);
+        }
     }
 
     private boolean isWord()

@@ -11,18 +11,21 @@ public class RecipeBrowser
     String factory;
     Scanner scanner;
     HashMap<String, Station> stations;
+    HashMap<String, Integer> allMaterials;
+    HashMap<String, HashMap<String, Double>> quantInCache = new HashMap<>();
     
-    public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings, HashMap<String, Station> stations, String factory)
+    public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings, HashMap<String, Station> stations, String factory, HashMap<String, Integer> allMaterials)
     {
-        this(recipes, settings, stations, factory, new Scanner(System.in));
+        this(recipes, settings, stations, factory, allMaterials, new Scanner(System.in));
     }
 
-    public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings, HashMap<String, Station> stations, String factory, Scanner scanner)
+    public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings, HashMap<String, Station> stations, String factory, HashMap<String, Integer> allMaterials, Scanner scanner)
     {
         this.recipes = recipes;
         this.settings = settings;
         this.stations = stations;
         this.factory = factory;
+        this.allMaterials = allMaterials;
         this.scanner = scanner;
     }
 
@@ -86,8 +89,37 @@ public class RecipeBrowser
         return getUserInt(0, 3);
     }
 
-    public double quantIn(String input, String output) throws InternalReferenceException
+    public double quantityIn(String input, String output, boolean verbose) throws InvalidMaterialException
     {
+        if (allMaterials.get(output) == null)
+        {
+            throw new InvalidMaterialException(output);
+        }
+        try
+        {
+            double result = quantIn(input, output, verbose);
+            quantInCache.clear();
+            return result;
+        } catch (InternalReferenceException e)
+        {
+            System.err.println(e.getMessage());
+            System.exit(1);
+            return 0;
+        }
+    }
+
+    private double quantIn(String input, String output, boolean verbose) throws InternalReferenceException
+    {
+        HashMap<String, Double> map;
+        map = quantInCache.get(input);
+        if (map != null)
+        {
+            Double result = map.get(output);
+            if (result != null)
+            {
+                return result;
+            }
+        }
         if (input.equals(output))
         {
             return 1;
@@ -108,11 +140,24 @@ public class RecipeBrowser
             recipe = recipes.get(0);
         }
         Station station = pickStation(recipe);
+        double productivity = getProd(station);
+        if (verbose)
+        {
+            System.out.println(recipe.toStringSpecific(station, productivity));
+        }
         double sum = 0;
         for (Material material : recipe.input)
         {
-            sum += quantIn(input, material.material) * material.quantity / (recipe.amountOutput(output) * getProd(station));
+            sum += quantIn(input, material.material, verbose) * material.quantity / (recipe.amountOutput(output) * productivity);
         }
+        
+        map = quantInCache.get(input);
+        if (map == null)
+        {
+            map = new HashMap<String, Double>();
+        }
+        map.put(output, sum);
+        quantInCache.put(input, map);
         return sum;
     }
 
@@ -190,6 +235,12 @@ public class RecipeBrowser
         return station.getProd(Integer.parseInt(moduleSetting.setting));
     }
 
+    public void query(String line) throws ParsingException, InvalidMaterialException
+    {
+        Query query = Parser.parseQuery(line, allMaterials);
+        query.query(this);
+    }
+
     public void addNewSetting(Setting setting)
     {
         settings.put(setting.topic, setting);
@@ -218,5 +269,13 @@ class InternalReferenceException extends Exception
         StringBuilder builder = new StringBuilder(super.getMessage());
         builder.append("Searched for '" + searchStationName + "'.");
         return builder.toString();
+    }
+}
+
+class InvalidMaterialException extends Exception
+{
+    public InvalidMaterialException(String output)
+    {
+        super("Error: '" + output + "' not found in any recipes.");
     }
 }

@@ -11,14 +11,22 @@ public class FactorioQueries
     {
         Scanner scanInp = new Scanner(System.in);
         RecipeBrowser recipes = initialiseBrowser("examplefactory.txt", scanInp);
-        try 
+
+        while (true)
         {
-            System.out.println(recipes.quantIn("copper", "r_circuit"));
-        } catch (InternalReferenceException e)
-        {
-            System.err.println(e.getMessage());
-            System.exit(1);
-        }
+            System.out.print("Command: ");
+            try
+            {
+                String nextLine = scanInp.nextLine();
+                recipes.query(nextLine);
+            } catch (ParsingException e)
+            {
+                System.err.println(e.getMessage());
+            } catch (InvalidMaterialException e)
+            {
+                System.err.println(e.getMessage());
+            }
+        }            
     }
 
     static RecipeBrowser initialiseBrowser(String factory, Scanner scanInp)
@@ -28,9 +36,19 @@ public class FactorioQueries
             File file = new File("recipes.txt");
             Scanner scanner = new Scanner(file);
             ArrayList<Recipe> recipes = new ArrayList<Recipe>();
+            HashMap<String, Integer> allMaterials = new HashMap<String, Integer>();
             while (scanner.hasNextLine())
             {
-                recipes.add(Parser.parseRecipe(scanner.nextLine()));
+                Recipe recipe = Parser.parseRecipe(scanner.nextLine());
+                for (Material input : recipe.input)
+                {
+                    allMaterials.put(input.material, 1);
+                }
+                for (Material output : recipe.output)
+                {
+                    allMaterials.put(output.material, 1);
+                }
+                recipes.add(recipe);
             }
             scanner.close();
 
@@ -54,18 +72,18 @@ public class FactorioQueries
             }
             scanner.close();
 
-            return new RecipeBrowser(recipes, settings, stations, factory, scanInp);
+            return new RecipeBrowser(recipes, settings, stations, factory, allMaterials, scanInp);
         } catch (FileNotFoundException e)
         {
             System.err.println(e.getMessage());
             System.exit(1);
+            return null;
         } catch (ParsingException e)
         {
             e.printStackTrace();
             System.err.println(e.getMessage());
             System.exit(1);
+            return null;
         }
-        System.err.println("Error: This should be unreachable.");
-        return null;
     }
 }

@@ -119,9 +119,43 @@ public class Recipe
 
     public String toString()
     {
-        StringBuilder string = new StringBuilder();
         boolean first = true;
+        StringBuilder string = new StringBuilder(buildInputOutputString(first));
 
+        if (this.stations.size() > 0)
+        {
+            if (hasReq)
+            {  
+                string.append(" | ");
+            } else
+            {
+                string.append(" * ");
+            }
+        }
+
+        first = true;
+        for (String station : this.stations)
+        {
+            if (first)
+            {
+                string.append(station);
+                first = false;
+            } else
+            {
+                string.append(", " + station);
+            }
+        }
+
+        if (!canProd)
+        {
+            string.append(" \\ prod");
+        }
+        return string.toString();
+    }
+
+    private String buildInputOutputString(boolean first)
+    {
+        StringBuilder string = new StringBuilder();
         for (Material output : this.output)
         {
             if (first)
@@ -152,35 +186,14 @@ public class Recipe
                 string.append(", " + input.toString());
             }
         }
+        return string.toString();
+    }
 
-        if (this.stations.size() > 0)
-        {
-            if (hasReq)
-            {  
-                string.append(" | ");
-            } else
-            {
-                string.append(" * ");
-            }
-        }
-
-        first = true;
-        for (String station : this.stations)
-        {
-            if (first)
-            {
-                string.append(station);
-                first = false;
-            } else
-            {
-                string.append(", " + station);
-            }
-        }
-
-        if (!canProd)
-        {
-            string.append(" \\ prod");
-        }
+    public String toStringSpecific(Station station, double productivity)
+    {
+        StringBuilder string = new StringBuilder(buildInputOutputString(canProd));
+        int percentage = (int) (productivity * 100 - 100);
+        string.append(" @ " + station.name + ". Productivity: " + percentage + "%");
         return string.toString();
     }
 }
