@@ -177,6 +177,7 @@ public class Parser
         {
             firstWord = parser.getWord();
         }
+        String topic;
         switch (firstWord)
         {
             case "get":
@@ -187,8 +188,11 @@ public class Parser
             case "list":
                 String material = parser.getWord();
                 return new ListQuery(material, verbose);
+            case "setting":
+                topic = parser.getWord();
+                return new SettingQuery(topic, verbose);
             case "update":
-                String topic = parser.getWord();
+                topic = parser.getWord();
                 parser.eat('=');
                 String setting = parser.getWord();
                 return new UpdateSettingQuery(topic, setting, verbose);
