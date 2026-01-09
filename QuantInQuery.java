@@ -15,8 +15,28 @@ public class QuantInQuery extends Query
     
     public void query(RecipeBrowser browser) throws InvalidMaterialException
     {
-        double result = browser.quantityIn(input, output, prod_mod_level, verbose);
-        System.out.print("Result: ");
-        System.out.println(String.format("%.3f", result));
+        if (input.equals("all"))
+        {
+            boolean first = true;
+            for (String base_ingredient : browser.baseIngredients(output))
+            {
+                if (!first && verbose)
+                {
+                    System.out.println();
+                } else 
+                {
+                    first = false;
+                }
+                double result = browser.quantityIn(base_ingredient, output, prod_mod_level, verbose);
+                System.out.print(base_ingredient + ": ");
+                System.out.println(String.format("%.3f", result));
+            }
+        }
+        else 
+        {
+            double result = browser.quantityIn(input, output, prod_mod_level, verbose);
+            System.out.print("Result: ");
+            System.out.println(String.format("%.3f", result));
+        }
     }
 }

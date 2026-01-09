@@ -27,7 +27,7 @@ public class Recipe
     {
         for (Material output : this.outputs)
         {
-            if (output.material.equals(material))
+            if (output.name.equals(material))
             {
                 return output.quantity;
             }
@@ -44,7 +44,7 @@ public class Recipe
     {
         for (Material input : this.inputs)
         {
-            if (input.material.equals(material))
+            if (input.name.equals(material))
             {
                 return input.quantity;
             }
@@ -170,7 +170,7 @@ public class Recipe
         }
         string.append(" at " + station.name);
         string.append(".\nProductivity: " + percentage + "%");
-        string.append(String.format(", Crafting Time: %.3f. seconds", crafting_time/speed));
+        string.append(String.format(", Crafting Time: %.3f seconds.", crafting_time/speed));
         return string.toString();
     }
 }

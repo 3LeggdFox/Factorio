@@ -3,6 +3,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class RecipeBrowser 
 {
@@ -101,10 +102,11 @@ public class RecipeBrowser
 
     public double quantityIn(String input, String output, int prod_mod_level, boolean verbose) throws InvalidMaterialException
     {
-        if (allMaterials.get(output) == null)
+        if (allMaterials.get(output) == null && !output.equals(output))
         {
             throw new InvalidMaterialException(output);
         }
+        
         try
         {
             double result = quantIn(input, output, prod_mod_level, verbose);
@@ -139,16 +141,8 @@ public class RecipeBrowser
         {
             return 0;
         }
-        
-        Recipe recipe;
-        if (recipes.size() > 1)
-        { 
-            recipe = pickRecipe(output, recipes);
 
-        } else 
-        {
-            recipe = recipes.get(0);
-        }
+        Recipe recipe = pickRecipe(output, recipes);
         Station station = pickStation(recipe);
         double productivity = station.getProd(prod_mod_level);
         if (verbose)
@@ -158,7 +152,7 @@ public class RecipeBrowser
         double sum = 0;
         for (Material material : recipe.inputs)
         {
-            sum += quantIn(input, material.material, prod_mod_level, verbose) * material.quantity / (recipe.amountOutput(output) * productivity);
+            sum += quantIn(input, material.name, prod_mod_level, verbose) * material.quantity / (recipe.amountOutput(output) * productivity);
         }
         
         map = quantInCache.get(input);
@@ -169,6 +163,28 @@ public class RecipeBrowser
         map.put(output, sum);
         quantInCache.put(input, map);
         return sum;
+    }
+
+    public ArrayList<String> baseIngredients(String output)
+    {
+        HashSet<String> base_ingredients = new HashSet<>();
+        baseIngredients(output, base_ingredients);
+        return new ArrayList<>(base_ingredients);
+    }
+
+    private void baseIngredients(String output, HashSet<String> hash_set)
+    {
+        ArrayList<Recipe> recipes = findRecipes(output);
+        if (recipes.isEmpty())
+        {
+            hash_set.add(output);
+            return;
+        }
+        Recipe recipe = pickRecipe(output, recipes);
+        for (Material material : recipe.inputs)
+        {
+            baseIngredients(material.name, hash_set);
+        }
     }
 
     public void listQuery(String item, boolean verbose)
@@ -230,6 +246,10 @@ public class RecipeBrowser
 
     public Recipe pickRecipe(String output, ArrayList<Recipe> recipes) 
     {
+        if (recipes.size() == 1)
+        {
+            return recipes.get(0);
+        }
         Setting setting = settings.get(output);
         Recipe recipe = null;
         if (setting == null) 
