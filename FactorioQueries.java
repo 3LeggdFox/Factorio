@@ -14,9 +14,8 @@ public class FactorioQueries {
             try {
                 String nextLine = scanInp.nextLine();
                 recipes.query(nextLine);
-            } catch (ParsingException e) {
-                System.err.println(e.getMessage());
-            } catch (InvalidMaterialException e) {
+            } catch (QueryException e)
+            {
                 System.err.println(e.getMessage());
             }
         }
@@ -63,7 +62,7 @@ public class FactorioQueries {
             System.err.println(e.getMessage());
             System.exit(1);
             return null;
-        } catch (ParsingException e) {
+        } catch (QueryException e) {
             e.printStackTrace();
             System.err.println(e.getMessage());
             System.exit(1);

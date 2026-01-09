@@ -98,7 +98,7 @@ public class RecipeBrowser {
             double result = quantIn(input, output, prod_mod_level, verbose);
             quantInCache.clear();
             return result;
-        } catch (InternalReferenceException e) {
+        } catch (StationNotFoundException e) {
             System.err.println(e.getMessage());
             System.exit(1);
             return 0;
@@ -106,7 +106,7 @@ public class RecipeBrowser {
     }
 
     private double quantIn(String input, String output, int prod_mod_level, boolean verbose)
-            throws InternalReferenceException {
+            throws StationNotFoundException {
         HashMap<String, Double> map;
         map = quantInCache.get(input);
         if (map != null) {
@@ -229,7 +229,7 @@ public class RecipeBrowser {
         return recipe;
     }
 
-    public Station pickStation(Recipe recipe) throws InternalReferenceException {
+    public Station pickStation(Recipe recipe) throws StationNotFoundException {
         Station station = null;
         int highestPrio = -1;
         ArrayList<String> allowedStations = (ArrayList<String>) recipe.stations.clone();
@@ -243,7 +243,7 @@ public class RecipeBrowser {
             if (setting.value.equals("1")) {
                 Station searchStation = stations.get(station_name);
                 if (searchStation == null) {
-                    throw new InternalReferenceException("Error: Recipe uses station not found in station.txt.",
+                    throw new StationNotFoundException("Error: Recipe uses station not found in station.txt.",
                             searchStation);
                 }
                 if (searchStation.priority > highestPrio) {
@@ -314,10 +314,10 @@ public class RecipeBrowser {
     }
 }
 
-class InternalReferenceException extends Exception {
+class StationNotFoundException extends RuntimeException {
     Station searchStationName;
 
-    public InternalReferenceException(String message, Station searchStationName) {
+    public StationNotFoundException(String message, Station searchStationName) {
         super(message);
         this.searchStationName = searchStationName;
     }
@@ -329,7 +329,7 @@ class InternalReferenceException extends Exception {
     }
 }
 
-class InvalidMaterialException extends Exception {
+class InvalidMaterialException extends QueryException {
     public InvalidMaterialException(String output) {
         super("Error: '" + output + "' not found in any recipes.");
     }

@@ -58,13 +58,8 @@ public class Recipe {
     }
 
     public String toString() {
-        // Inputs and Outputs
+        // Inputs, Outputs, and Crafting Time
         StringBuilder string = new StringBuilder(buildInputOutputString());
-
-        // Crafting Time
-        string.append(". Takes ");
-        string.append(crafting_time);
-        string.append(" seconds");
 
         // Station Requirements/Options
         if (this.stations.size() > 0) {
@@ -122,11 +117,15 @@ public class Recipe {
                 string.append(", " + input.toString());
             }
         }
+        // Crafting Time
+        string.append(". Takes ");
+        string.append(crafting_time);
+        string.append(" seconds");
         return string.toString();
     }
 
     public String toStringSpecific(Station station, int prod_mod_level) {
-        double speed = station.getSpeed(prod_mod_level);
+        double craft_speed = station.getSpeed(prod_mod_level);
         StringBuilder string = new StringBuilder("Using Recipe: ");
         string.append(buildInputOutputString());
         int percentage;
@@ -136,9 +135,14 @@ public class Recipe {
         } else {
             percentage = 0;
         }
-        string.append(" at " + station.name);
+        string.append(", using " + station.name);
         string.append(".\nProductivity: " + percentage + "%");
-        string.append(String.format(", Crafting Time: %.3f seconds.", crafting_time / speed));
+        string.append(String.format(", Crafting Speed: %.3f.", craft_speed));
         return string.toString();
+    }
+
+    public double getCraftingTime(Station station, int prod_mod_level)
+    {
+        return crafting_time / station.getSpeed(prod_mod_level);
     }
 }

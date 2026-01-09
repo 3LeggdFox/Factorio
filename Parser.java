@@ -126,22 +126,31 @@ public class Parser {
         boolean verbose = parser.tryEatWord("verbose");
         String firstWord = parser.getWord();
         String topic;
+        String material;
+        int prod_mod_level;
         switch (firstWord) {
             case "get":
                 String input = parser.getWord();
                 parser.eatWord("in");
                 String output = parser.getWord();
-                int prod_mod_level = 0;
+                prod_mod_level = 0;
                 if (parser.tryEatWord("prod")) {
                     prod_mod_level = (int) (parser.getNumber(true) + 0.5);
                 }
                 return new QuantInQuery(input, output, prod_mod_level, verbose);
             case "list":
-                String material = parser.getWord();
+                material = parser.getWord();
                 return new ListQuery(material, verbose);
             case "setting":
                 topic = parser.getWord();
                 return new SettingQuery(topic, verbose);
+            case "time":
+                material = parser.getWord();
+                prod_mod_level = 0;
+                if (parser.tryEatWord("prod")) {
+                    prod_mod_level = (int) (parser.getNumber(true) + 0.5);
+                }
+                return new TimeQuery(material, prod_mod_level, verbose);
             case "update":
                 topic = parser.getWord();
                 parser.eat('=');
@@ -289,7 +298,7 @@ public class Parser {
     }
 }
 
-class ParsingException extends Exception {
+class ParsingException extends QueryException {
     String offender;
     int position;
 
