@@ -71,9 +71,15 @@ public class Recipe
 
     public String toString()
     {
-        boolean first = true;
-        StringBuilder string = new StringBuilder(buildInputOutputString(first));
+        // Inputs and Outputs
+        StringBuilder string = new StringBuilder(buildInputOutputString());
 
+        // Crafting Time
+        string.append(". Takes ");
+        string.append(crafting_time);
+        string.append(" seconds");
+
+        // Station Requirements/Options
         if (this.stations.size() > 0)
         {
             string.append(", ");
@@ -86,7 +92,8 @@ public class Recipe
             }
         }
 
-        first = true;
+        // All Usable Stations
+        boolean first = true;
         for (String station : this.stations)
         {
             if (!station.equals("Assembly1") && !station.equals("Assembly2") && !station.equals("Assembly3"))
@@ -102,6 +109,7 @@ public class Recipe
             }
         }
 
+        // Productivity tag
         if (!can_prod)
         {
             string.append(", no productivity modules");
@@ -109,9 +117,10 @@ public class Recipe
         return string.toString();
     }
 
-    private String buildInputOutputString(boolean first)
+    private String buildInputOutputString()
     {
         StringBuilder string = new StringBuilder();
+        boolean first = true;
         for (Material output : this.outputs)
         {
             if (first)
@@ -142,18 +151,26 @@ public class Recipe
                 string.append(", " + input.toString());
             }
         }
-        string.append(". Takes ");
-        string.append(crafting_time);
-        string.append(" seconds");
         return string.toString();
     }
 
-    public String toStringSpecific(Station station, double productivity)
+    public String toStringSpecific(Station station, int prod_mod_level)
     {
-        StringBuilder string = new StringBuilder(buildInputOutputString(can_prod));
-        System.out.println(productivity);
-        int percentage = (int) (productivity * 100 - 100 + 0.5);
-        string.append(" at " + station.name + ". Productivity: " + percentage + "%");
+        double speed = station.getSpeed(prod_mod_level);
+        StringBuilder string = new StringBuilder("Using Recipe: ");
+        string.append(buildInputOutputString());
+        int percentage;
+        double productivity = station.getProd(prod_mod_level);
+        if (can_prod)
+        {
+            percentage = (int) (productivity * 100 - 100 + 0.5);
+        } else 
+        {
+            percentage = 0;
+        }
+        string.append(" at " + station.name);
+        string.append(".\nProductivity: " + percentage + "%");
+        string.append(String.format(", Crafting Time: %.3f. seconds", crafting_time/speed));
         return string.toString();
     }
 }

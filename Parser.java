@@ -121,19 +121,21 @@ public class Parser {
         parser.eat(',');
         double productivity_bonus = parser.getNumber();
         parser.eat('%');
+        parser.eatWord("productivity");
+        parser.eat(',');
+        double crafting_speed = parser.getNumber();
+        parser.eatWord("crafting");
+        parser.eatWord("speed");
         parser.eat(',');
         int priority = (int) (parser.getNumber(true) + 0.5);
         parser.eatWord("prio");
-        return new Station(station_name, modules, productivity_bonus, priority);
+        return new Station(station_name, modules, productivity_bonus, crafting_speed, priority);
     }
 
     public static Query parseQuery(String line, HashMap<String, Integer> allMaterials) throws ParsingException {
         Parser parser = new Parser(line);
+        boolean verbose = parser.tryEatWord("verbose");
         String firstWord = parser.getWord();
-        boolean verbose = firstWord.equals("verbose");
-        if (verbose) {
-            firstWord = parser.getWord();
-        }
         String topic;
         switch (firstWord) {
             case "get":

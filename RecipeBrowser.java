@@ -153,7 +153,7 @@ public class RecipeBrowser
         double productivity = station.getProd(prod_mod_level);
         if (verbose)
         {
-            System.out.println(recipe.toStringSpecific(station, productivity));
+            System.out.println(recipe.toStringSpecific(station, prod_mod_level));
         }
         double sum = 0;
         for (Material material : recipe.inputs)

@@ -1,5 +1,5 @@
 hasFoundry = 1
-hasEM = 0
+hasEM = 1
 hasRefinery = 1
 cog = default
 hasChemicalPlant = 1

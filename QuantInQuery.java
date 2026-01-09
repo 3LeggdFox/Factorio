@@ -1,3 +1,4 @@
+
 public class QuantInQuery extends Query
 {
     String input;
@@ -14,6 +15,8 @@ public class QuantInQuery extends Query
     
     public void query(RecipeBrowser browser) throws InvalidMaterialException
     {
-        System.out.println(browser.quantityIn(input, output, prod_mod_level, verbose));
+        double result = browser.quantityIn(input, output, prod_mod_level, verbose);
+        System.out.print("Result: ");
+        System.out.println(String.format("%.3f", result));
     }
 }

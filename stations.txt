@@ -1,5 +1,5 @@
-Assembly1: 0 modules, 0%, 1 prio
-Assembly2: 2 modules, 0%, 2 prio
-Assembly2: 4 modules, 0%, 3 prio
-Foundry: 4 modules, 50%, 4 prio
-EM: 4 modules, 50%, 4 prio
+Assembly1: 0 modules, 0% productivity, 0.5 crafting speed, 1 prio
+Assembly2: 2 modules, 0% productivity, 0.75 crafting speed, 2 prio
+Assembly3: 4 modules, 0% productivity, 1.25 crafting speed, 3 prio
+Foundry: 4 modules, 50% productivity, 4 crafting speed, 4 prio
+EM: 4 modules, 50% productivity, 2 crafting speed, 4 prio
