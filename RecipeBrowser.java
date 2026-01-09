@@ -99,7 +99,7 @@ public class RecipeBrowser
         return getUserInt(0, 3);
     }
 
-    public double quantityIn(String input, String output, boolean verbose) throws InvalidMaterialException
+    public double quantityIn(String input, String output, int prod_mod_level, boolean verbose) throws InvalidMaterialException
     {
         if (allMaterials.get(output) == null)
         {
@@ -107,7 +107,7 @@ public class RecipeBrowser
         }
         try
         {
-            double result = quantIn(input, output, verbose);
+            double result = quantIn(input, output, prod_mod_level, verbose);
             quantInCache.clear();
             return result;
         } catch (InternalReferenceException e)
@@ -118,7 +118,7 @@ public class RecipeBrowser
         }
     }
 
-    private double quantIn(String input, String output, boolean verbose) throws InternalReferenceException
+    private double quantIn(String input, String output, int prod_mod_level, boolean verbose) throws InternalReferenceException
     {
         HashMap<String, Double> map;
         map = quantInCache.get(input);
@@ -150,7 +150,7 @@ public class RecipeBrowser
             recipe = recipes.get(0);
         }
         Station station = pickStation(recipe);
-        double productivity = getProd(station);
+        double productivity = station.getProd(prod_mod_level);
         if (verbose)
         {
             System.out.println(recipe.toStringSpecific(station, productivity));
@@ -158,7 +158,7 @@ public class RecipeBrowser
         double sum = 0;
         for (Material material : recipe.inputs)
         {
-            sum += quantIn(input, material.material, verbose) * material.quantity / (recipe.amountOutput(output) * productivity);
+            sum += quantIn(input, material.material, prod_mod_level, verbose) * material.quantity / (recipe.amountOutput(output) * productivity);
         }
         
         map = quantInCache.get(input);
@@ -284,7 +284,7 @@ public class RecipeBrowser
         return station;
     }
 
-    public double getProd(Station station)
+    public double getProd(Station station, int prod_mod_level)
     {
         String moduleString = "prodModLevel";
         Setting moduleSetting = settings.get(moduleString);

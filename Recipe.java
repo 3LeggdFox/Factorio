@@ -151,7 +151,8 @@ public class Recipe
     public String toStringSpecific(Station station, double productivity)
     {
         StringBuilder string = new StringBuilder(buildInputOutputString(can_prod));
-        int percentage = (int) (productivity * 100 - 100);
+        System.out.println(productivity);
+        int percentage = (int) (productivity * 100 - 100 + 0.5);
         string.append(" at " + station.name + ". Productivity: " + percentage + "%");
         return string.toString();
     }

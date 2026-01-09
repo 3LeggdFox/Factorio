@@ -116,13 +116,13 @@ public class Parser {
         Parser parser = new Parser(line);
         String station_name = parser.getWord();
         parser.eat(':');
-        int modules = (int) parser.getNumber();
+        int modules = (int) (parser.getNumber(true) + 0.5);
         parser.eatWord("modules");
         parser.eat(',');
         double productivity_bonus = parser.getNumber();
         parser.eat('%');
         parser.eat(',');
-        int priority = (int) parser.getNumber();
+        int priority = (int) (parser.getNumber(true) + 0.5);
         parser.eatWord("prio");
         return new Station(station_name, modules, productivity_bonus, priority);
     }
@@ -140,7 +140,12 @@ public class Parser {
                 String input = parser.getWord();
                 parser.eatWord("in");
                 String output = parser.getWord();
-                return new QuantInQuery(input, output, verbose);
+                int prod_mod_level = 0;
+                if (parser.tryEatWord("prod"))
+                {
+                    prod_mod_level = (int) (parser.getNumber(true) + 0.5);
+                }
+                return new QuantInQuery(input, output, prod_mod_level, verbose);
             case "list":
                 String material = parser.getWord();
                 return new ListQuery(material, verbose);
@@ -192,17 +197,25 @@ public class Parser {
         return line.substring(initPos, position);
     }
 
-    private double getNumber() throws ParsingException {
+    private double getNumber() throws ParsingException
+    {
+        return getNumber(false);
+    }
+
+    private double getNumber(boolean int_only) throws ParsingException {
         trim();
         int initPos = position;
         while (isNumber()) {
             position++;
         }
-        if (tryEat('.'))
+        if (!int_only)
         {
-            while (isNumber())
+            if (tryEat('.'))
             {
-                position++;
+                while (isNumber())
+                {
+                    position++;
+                }
             }
         }
         if (initPos == position) {
