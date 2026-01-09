@@ -39,11 +39,11 @@ public class FactorioQueries
             while (scanner.hasNextLine())
             {
                 Recipe recipe = Parser.parseRecipe(scanner.nextLine());
-                for (Material input : recipe.input)
+                for (Material input : recipe.inputs)
                 {
                     allMaterials.put(input.material, 1);
                 }
-                for (Material output : recipe.output)
+                for (Material output : recipe.outputs)
                 {
                     allMaterials.put(output.material, 1);
                 }

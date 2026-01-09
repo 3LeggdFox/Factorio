@@ -1,7 +1,7 @@
-1 cog = 2 iron
-1 cog(molten) = 10 molten_iron | Foundry
-2 yellow_belt = 1 iron, 1 cog \ prod
-2 cable = 1 copper * EM
-2 cable(molten) = 5 molten_copper | Foundry
-1 green_circuit = 1 iron, 3 cable * EM
-1 red_circuit = 2 plastic, 4 cable, 2 green_circuit * EM
+1 cog = 2 iron. Takes 0.5 seconds
+1 cog(molten) = 10 molten_iron. Takes 1 seconds, needs Foundry
+2 yellow_belt = 1 iron, 1 cog. Takes 0.5 seconds, can use Foundry, no productivity modules
+2 cable = 1 copper. Takes 0.5 seconds, can use EM
+2 cable(molten) = 5 molten_copper. Takes 1 seconds, needs Foundry
+1 green_circuit = 1 iron, 3 cable. Takes 0.5 seconds, can use EM
+1 red_circuit = 2 plastic, 4 cable, 2 green_circuit. Takes 6 seconds, can use EM

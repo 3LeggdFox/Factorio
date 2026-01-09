@@ -156,7 +156,7 @@ public class RecipeBrowser
             System.out.println(recipe.toStringSpecific(station, productivity));
         }
         double sum = 0;
-        for (Material material : recipe.input)
+        for (Material material : recipe.inputs)
         {
             sum += quantIn(input, material.material, verbose) * material.quantity / (recipe.amountOutput(output) * productivity);
         }
@@ -237,12 +237,12 @@ public class RecipeBrowser
             int counter = giveOptions(recipes);
             int userIn = getUserInt(0, counter);
             recipe = recipes.get(userIn);
-            addNewSetting(new Setting(output, recipe.altName));
+            addNewSetting(new Setting(output, recipe.alt_name));
         } else
         {
             for (Recipe r : recipes)
             {
-                if (r.altName.equals(setting.value) || (r.altName == null && setting.value.equals("default")))
+                if (r.alt_name.equals(setting.value) || (r.alt_name == null && setting.value.equals("default")))
                 {
                     recipe = r;
                     break;

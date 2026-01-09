@@ -3,89 +3,29 @@ import java.lang.StringBuilder;
 
 public class Recipe
 {
-    ArrayList<Material> input = new ArrayList<Material>();
-    ArrayList<Material> output = new ArrayList<Material>();
-    boolean canProd;
-    boolean hasReq;
+    ArrayList<Material> inputs = new ArrayList<Material>();
+    ArrayList<Material> outputs = new ArrayList<Material>();
     ArrayList<String> stations = new ArrayList<String>();
+    double crafting_time;
+    boolean has_req;
+    boolean can_prod;
+    String alt_name;
     String station = null;
-    String altName;
 
-    public Recipe() {}
-
-    public Recipe(String line)
+    public Recipe(ArrayList<Material> inputs, ArrayList<Material> outputs, ArrayList<String> stations, double crafting_time, boolean has_req, boolean can_prod, String alt_name)
     {
-        // Check Productivity Applicability Tag
-        String[] segments = line.split("\\\\");         // Seperate productivity ability tag
-        this.canProd = segments.length == 1;            // Temp solution. Only deals with productivity
-
-        // Check For Alternate Station(s)
-        String[] stations;
-        segments = segments[0].split("\\*");            // Separate alternate station
-        if (segments.length > 1)
-        {
-            // Query factory file for preferable station. Otherwise ask for preference before continuing.
-            /* Still needs to be implemented */
-
-            stations = segments[1].split(",");          // Split into different station options
-            for (String station : stations)
-            {
-                this.stations.add(station.trim());      // Add to list of options
-            }
-        }
-
-        // Check For Required Station(s)
-        segments = segments[0].split("\\|");
-        if (segments.length > 1)
-        {
-            this.hasReq = true;
-            // Query factory file for preferable station. Otherwise ask for preference before continuing. Also check if any of the stations are unlocked
-            /* Still needs to be implemented */
-            stations = segments[1].split(",");          // Split into different station options
-            for (String station : stations)
-            {
-                this.stations.add(station.trim());      // Add to list of options
-            }
-        } else
-        {
-            this.hasReq = false;
-        }
-
-        // Set Station If None Set
-        if (this.station == null)
-        {
-            // Query factory file for most advanced assembly machine, set station to this
-            /* Still needs to be implemented */
-        }
-
-        // Record Inputs
-        segments = segments[0].split("=");          // Find Inputs and Outputs
-        String[] inputs = segments[1].split(",");   // Separate Inputs
-        output = new ArrayList<Material>();         // Initialise
-        for (String inp : inputs)
-        {
-            inp = inp.trim();
-            String[] pair = inp.split(" ");         // Split into quantity and material
-            input.add(new Material(Double.parseDouble(pair[0]), pair[1])); // Append new Material
-        }
-
-        // Record Alternate Recipe
-        /* Still needs to be implemented */
-
-        // Record Outputs
-        String[] outputs = segments[0].split(",");  // Separate Outputs
-        output = new ArrayList<Material>();         // Initialise
-        for (String out : outputs)
-        {
-            out = out.trim();
-            String[] pair = out.split(" ");         // Split into quantity and material
-            output.add(new Material(Double.parseDouble(pair[0]), pair[1])); // Append new Material
-        }
+        this.inputs = inputs;
+        this.outputs = outputs;
+        this.stations = stations;
+        this.crafting_time = crafting_time;
+        this.has_req = has_req;
+        this.can_prod = can_prod;
+        this.alt_name = alt_name;
     }
 
     public double amountOutput(String material)
     {
-        for (Material output : this.output)
+        for (Material output : this.outputs)
         {
             if (output.material.equals(material))
             {
@@ -102,7 +42,7 @@ public class Recipe
 
     public double amountInput(String material)
     {
-        for (Material input : this.input)
+        for (Material input : this.inputs)
         {
             if (input.material.equals(material))
             {
@@ -136,12 +76,13 @@ public class Recipe
 
         if (this.stations.size() > 0)
         {
-            if (hasReq)
+            string.append(", ");
+            if (has_req)
             {  
-                string.append(" | ");
+                string.append("needs ");
             } else
             {
-                string.append(" * ");
+                string.append("can use ");
             }
         }
 
@@ -161,9 +102,9 @@ public class Recipe
             }
         }
 
-        if (!canProd)
+        if (!can_prod)
         {
-            string.append(" \\ prod");
+            string.append(", no productivity modules");
         }
         return string.toString();
     }
@@ -171,7 +112,7 @@ public class Recipe
     private String buildInputOutputString(boolean first)
     {
         StringBuilder string = new StringBuilder();
-        for (Material output : this.output)
+        for (Material output : this.outputs)
         {
             if (first)
             {
@@ -181,16 +122,16 @@ public class Recipe
             {
                 string.append(", " + output.toString());
             }
-            if (!altName.equals("default"))
+            if (!alt_name.equals("default"))
             {
-                string.append("(" + altName + ")");
+                string.append("(" + alt_name + ")");
             }
         }
 
         string.append(" = ");
 
         first = true;
-        for (Material input : this.input)
+        for (Material input : this.inputs)
         {
             if (first)
             {
@@ -201,14 +142,17 @@ public class Recipe
                 string.append(", " + input.toString());
             }
         }
+        string.append(". Takes ");
+        string.append(crafting_time);
+        string.append(" seconds");
         return string.toString();
     }
 
     public String toStringSpecific(Station station, double productivity)
     {
-        StringBuilder string = new StringBuilder(buildInputOutputString(canProd));
+        StringBuilder string = new StringBuilder(buildInputOutputString(can_prod));
         int percentage = (int) (productivity * 100 - 100);
-        string.append(" @ " + station.name + ". Productivity: " + percentage + "%");
+        string.append(" at " + station.name + ". Productivity: " + percentage + "%");
         return string.toString();
     }
 }

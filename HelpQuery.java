@@ -16,6 +16,9 @@ public class HelpQuery extends Query
         System.out.println("list <material>");
         System.out.println("    Lists all recipes involving material.");
         System.out.println();
+        System.out.println("setting <setting_topic>");
+        System.out.println("    Prints the setting.");
+        System.out.println();
         System.out.println("update <setting_topic> = <setting_value>");
         System.out.println("    Updates the setting file.");
         System.out.println("    Adds a new setting if the topic has none yet.");
