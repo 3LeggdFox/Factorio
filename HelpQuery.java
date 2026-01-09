@@ -1,12 +1,9 @@
-public class HelpQuery extends Query
-{
-    public HelpQuery(boolean verbose)
-    {
+public class HelpQuery extends Query {
+    public HelpQuery(boolean verbose) {
         this.verbose = verbose;
     }
 
-    public void query(RecipeBrowser browser)
-    {
+    public void query(RecipeBrowser browser) {
         System.out.println("Some Commands:");
         System.out.println();
         System.out.println("[verbose] get <material1> in <material2> [prod <productivity_module_level>]");

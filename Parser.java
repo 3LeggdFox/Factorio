@@ -14,8 +14,7 @@ public class Parser {
         this.line = line;
     }
 
-    public static Recipe parseRecipe(String line) throws ParsingException
-    {
+    public static Recipe parseRecipe(String line) throws ParsingException {
         Parser parser = new Parser(line);
 
         // Collect Outputs
@@ -26,13 +25,11 @@ public class Parser {
         ArrayList<String> stations = new ArrayList<String>();
         boolean has_req = false;
         boolean can_prod = true;
-        do     
-        {
+        do {
             quantity = parser.getNumber();
             material = parser.getWord();
             outputs.add(new Material(quantity, material));
-            if (parser.tryEat('('))
-            {
+            if (parser.tryEat('(')) {
                 alt_name = parser.getWord();
                 parser.eat(')');
             }
@@ -46,8 +43,7 @@ public class Parser {
         // Collect Inputs
         parser.eat('=');
         ArrayList<Material> inputs = new ArrayList<Material>();
-        do      
-        {
+        do {
             quantity = parser.getNumber();
             material = parser.getWord();
             inputs.add(new Material(quantity, material));
@@ -63,39 +59,32 @@ public class Parser {
         parser.eatWord("Takes");
         double crafting_time = parser.getNumber();
         parser.eatWord("seconds");
-        if (parser.tryEat(','))
-        {
+        if (parser.tryEat(',')) {
             // Collect Alternate Stations
-            if (parser.tryEatWord("can"))
-            {
+            if (parser.tryEatWord("can")) {
                 parser.eatWord("use");
-                do 
-                {
+                do {
                     stations.add(parser.getWord());
                 } while (parser.tryEat(','));
             }
 
             // Collect Required Stations
-            if (parser.tryEatWord("needs"))
-            {
+            if (parser.tryEatWord("needs")) {
                 has_req = true;
-                do 
-                {
+                do {
                     stations.add(parser.getWord());
                 } while (parser.tryEat(','));
             }
-            
+
             // Check if can use productivity modules
-            if (parser.tryEatWord("no"))
-            {
+            if (parser.tryEatWord("no")) {
                 parser.eatWord("productivity");
                 parser.eatWord("modules");
                 can_prod = false;
             }
         }
 
-        if (!has_req)
-        {
+        if (!has_req) {
             stations.add("Assembly1");
             stations.add("Assembly2");
             stations.add("Assembly3");
@@ -143,8 +132,7 @@ public class Parser {
                 parser.eatWord("in");
                 String output = parser.getWord();
                 int prod_mod_level = 0;
-                if (parser.tryEatWord("prod"))
-                {
+                if (parser.tryEatWord("prod")) {
                     prod_mod_level = (int) (parser.getNumber(true) + 0.5);
                 }
                 return new QuantInQuery(input, output, prod_mod_level, verbose);
@@ -199,8 +187,7 @@ public class Parser {
         return line.substring(initPos, position);
     }
 
-    private double getNumber() throws ParsingException
-    {
+    private double getNumber() throws ParsingException {
         return getNumber(false);
     }
 
@@ -210,12 +197,9 @@ public class Parser {
         while (isNumber()) {
             position++;
         }
-        if (!int_only)
-        {
-            if (tryEat('.'))
-            {
-                while (isNumber())
-                {
+        if (!int_only) {
+            if (tryEat('.')) {
+                while (isNumber()) {
                     position++;
                 }
             }
@@ -267,8 +251,7 @@ public class Parser {
             return false;
         }
         boolean result = expected == line.charAt(position);
-        if (result)
-        {
+        if (result) {
             position++;
         }
         return result;
@@ -299,8 +282,7 @@ public class Parser {
             System.out.println("You done fucked up m8.");
         }
         boolean result = expected.equals(word);
-        if (!result)
-        {
+        if (!result) {
             position = initPos;
         }
         return result;
