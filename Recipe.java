@@ -117,6 +117,18 @@ public class Recipe
         return amountInput(material) != 0;
     }
 
+    public boolean hasStation(String station)
+    {
+        for (String stat : stations)
+        {
+            if (stat.equals(station))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public String toString()
     {
         boolean first = true;
@@ -136,13 +148,16 @@ public class Recipe
         first = true;
         for (String station : this.stations)
         {
-            if (first)
+            if (!station.equals("Assembly1") && !station.equals("Assembly2") && !station.equals("Assembly3"))
             {
-                string.append(station);
-                first = false;
-            } else
-            {
-                string.append(", " + station);
+                if (first)
+                {
+                    string.append(station);
+                    first = false;
+                } else
+                {
+                    string.append(", " + station);
+                }
             }
         }
 

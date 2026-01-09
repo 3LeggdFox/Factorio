@@ -123,6 +123,13 @@ public class Parser
             recipe.canProd = true;
         }
 
+        if (!hasReq)
+        {
+            stations.add("Assembly1");
+            stations.add("Assembly2");
+            stations.add("Assembly3");
+        }
+
         recipe.output = outputs;
         recipe.altName = altName;
         recipe.input = inputs;
@@ -177,6 +184,11 @@ public class Parser
                 parser.eatWord("in");
                 String output = parser.getWord();
                 return new QuantInQuery(input, output, verbose);
+            case "list":
+                String material = parser.getWord();
+                return new ListQuery(material, verbose);
+            case "help":
+                return new HelpQuery(verbose);
             case "exit":
                 System.out.println("Cheers.");
                 System.exit(0);
@@ -326,7 +338,10 @@ class ParsingException extends Exception
         StringBuilder builder = new StringBuilder(super.getMessage());
         builder.append("\n" + offender + "\n");
         char[] positionString = " ".repeat(offender.length()).toCharArray();
-        positionString[position] = '^';
+        if (position < offender.length())
+        {
+            positionString[position] = '^'; 
+        }
         builder.append(positionString);
         return builder.toString();
     }

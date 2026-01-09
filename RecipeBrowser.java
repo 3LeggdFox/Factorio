@@ -161,6 +161,63 @@ public class RecipeBrowser
         return sum;
     }
 
+    public void listQuery(String item, boolean verbose)
+    {
+        ArrayList<Recipe> isInput = new ArrayList<Recipe>();
+        ArrayList<Recipe> isOutput = new ArrayList<Recipe>();
+        ArrayList<Recipe> isStation = new ArrayList<Recipe>();
+        for (Recipe recipe : recipes)
+        {
+            if (recipe.hasInput(item))
+            {
+                isInput.add(recipe);
+            }
+            if (recipe.hasOutput(item))
+            {
+                isOutput.add(recipe);
+            }
+            if (recipe.hasStation(item))
+            {
+                isStation.add(recipe);
+            }
+        }
+        boolean allEmpty = true;
+        if (!isOutput.isEmpty())
+        {
+            System.out.println("Item is made in recipes:");
+            for (Recipe recipe : isOutput)
+            {
+                System.out.println(recipe);
+            }
+            allEmpty = false;
+            System.out.println();
+        }
+        if (!isInput.isEmpty())
+        {
+            System.out.println("Item is used in recipes:");
+            for (Recipe recipe : isInput)
+            {
+                System.out.println(recipe);
+            }
+            allEmpty = false;
+            System.out.println();
+        }
+        if (!isStation.isEmpty())
+        {
+            System.out.println("Item serves as station in recipes:");
+            for (Recipe recipe : isStation)
+            {
+                System.out.println(recipe);
+            }
+            allEmpty = false;
+            System.out.println();
+        }
+        if (allEmpty)
+        {
+            System.out.println("This item was not found in any recipes.");
+        }
+    }
+
     public Recipe pickRecipe(String output, ArrayList<Recipe> recipes) 
     {
         Setting setting = settings.get(output);
@@ -190,12 +247,6 @@ public class RecipeBrowser
         Station station = null;
         int highestPrio = -1;
         ArrayList<String> allowedStations = (ArrayList<String>) recipe.stations.clone();
-        if (!recipe.hasReq)
-        {
-            allowedStations.add("Assembly1");
-            allowedStations.add("Assembly2");
-            allowedStations.add("Assembly3");
-        }
         for (String station_name : allowedStations)
         {
             String setting_name = "has" + station_name;

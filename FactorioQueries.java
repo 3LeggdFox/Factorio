@@ -6,7 +6,6 @@ import java.util.Scanner;
 
 public class FactorioQueries 
 {
-
     public static void main(String[] args)
     {
         Scanner scanInp = new Scanner(System.in);
