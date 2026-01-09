@@ -1,16 +1,16 @@
 public class Setting 
 {
     String topic;
-    String setting;
+    String value;
     
     public Setting(String topic, String setting)
     {
         this.topic = topic;
-        this.setting = setting;
+        this.value = setting;
     }
 
     public String toString()
     {
-        return topic + " = " + setting;
+        return topic + " = " + value;
     }
 }

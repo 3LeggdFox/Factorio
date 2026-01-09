@@ -9,7 +9,7 @@ public class RecipeBrowser
     ArrayList<Recipe> recipes;
     HashMap<String, Setting> settings;
     String factory;
-    Scanner scanner;
+    Scanner stdin;
     HashMap<String, Station> stations;
     HashMap<String, Integer> allMaterials;
     HashMap<String, HashMap<String, Double>> quantInCache = new HashMap<>();
@@ -26,7 +26,7 @@ public class RecipeBrowser
         this.stations = stations;
         this.factory = factory;
         this.allMaterials = allMaterials;
-        this.scanner = scanner;
+        this.stdin = scanner;
     }
 
     public ArrayList<Recipe> findRecipes(String material)
@@ -60,13 +60,23 @@ public class RecipeBrowser
         return counter;
     }
 
+    public boolean giveYesNo()
+    {
+        System.out.println("0: No.");
+        System.out.println("1: Yes.");
+        return getUserInt(0, 1) == 1;
+
+    }
+
     public int getUserInt(int min, int max) 
     {
-        int userIn = scanner.nextInt();
+        int userIn = stdin.nextInt();
+        stdin.nextLine();
         while (userIn < min && userIn >= max)
         {
             System.out.println("Please select a valid option (in the range [" + min + "," + (max-1) + "]).");
-            userIn = scanner.nextInt();
+            userIn = stdin.nextInt();
+            stdin.nextLine();
         }
         return userIn;
     }
@@ -232,7 +242,7 @@ public class RecipeBrowser
         {
             for (Recipe r : recipes)
             {
-                if (r.altName.equals(setting.setting) || (r.altName == null && setting.setting.equals("default")))
+                if (r.altName.equals(setting.value) || (r.altName == null && setting.value.equals("default")))
                 {
                     recipe = r;
                     break;
@@ -256,7 +266,7 @@ public class RecipeBrowser
                 setting = new Setting(setting_name, Integer.toString(hasStation(station_name)));
                 addNewSetting(setting);
             }
-            if (setting.setting.equals("1"))
+            if (setting.value.equals("1"))
             {
                 Station searchStation = stations.get(station_name);
                 if (searchStation == null)
@@ -283,7 +293,7 @@ public class RecipeBrowser
             moduleSetting = new Setting(moduleString, Integer.toString(moduleLevel("production")));
             addNewSetting(moduleSetting);
         }
-        return station.getProd(Integer.parseInt(moduleSetting.setting));
+        return station.getProd(Integer.parseInt(moduleSetting.value));
     }
 
     public void query(String line) throws ParsingException, InvalidMaterialException
@@ -302,6 +312,45 @@ public class RecipeBrowser
         } catch (IOException e)
         {
             e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    public void changeSetting(Setting setting)
+    {
+        if (!settings.containsKey(setting.topic))
+        {
+            System.out.println("The setting '" + setting.topic + "' was not found. Would you like to add this setting?");
+            if (giveYesNo())
+            {
+                addNewSetting(setting);
+                System.out.println("Setting '" + setting.toString() + "' was added.");
+            }
+        } else 
+        {
+            String old_value = settings.get(setting.topic).value;
+            settings.put(setting.topic, setting);
+            System.out.println("Setting '" + setting.topic + "' was updated from '" + old_value + "' to '" + setting.value + "'.");
+        }
+
+        try (FileWriter writer = new FileWriter(factory))
+        {
+            boolean first = true;
+            for (Setting set : settings.values())
+            {
+                if (!first)
+                {
+                    writer.write("\n");
+                } else
+                {
+                    first = false;
+                }
+                writer.write(set.toString());
+            }
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 }

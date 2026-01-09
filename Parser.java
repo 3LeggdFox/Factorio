@@ -187,6 +187,11 @@ public class Parser
             case "list":
                 String material = parser.getWord();
                 return new ListQuery(material, verbose);
+            case "update":
+                String topic = parser.getWord();
+                parser.eat('=');
+                String setting = parser.getWord();
+                return new UpdateSettingQuery(topic, setting, verbose);
             case "help":
                 return new HelpQuery(verbose);
             case "exit":
@@ -291,6 +296,7 @@ public class Parser
 
     private void eat(char expected) throws ParsingException
     {
+        trim();
         if (line.length() <= position)
         {
             throw new ParsingException("Error: Trying to eat past end of string.", line, position);

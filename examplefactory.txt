@@ -1,10 +1,11 @@
 hasFoundry = 1
-hasEM = 1
+hasEM = 0
 hasRefinery = 1
-hasBioChamber = 1
 cog = default
+hasChemicalPlant = 1
+hasBioChamber = 1
 hasAssembly1 = 1
-hasAssembly2 = 1
-hasAssembly3 = 0
 cable = default
 prodModLevel = 3
+hasAssembly2 = 1
+hasAssembly3 = 0
