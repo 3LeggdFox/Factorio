@@ -192,8 +192,9 @@ public class Parser {
                 parser.checkExcess();
                 return new MathQuery(number, operation, number2);
             case "help":
+                String command = parser.tryGetWord();
                 parser.checkExcess();
-                return new HelpQuery(verbose);
+                return new HelpQuery(command, verbose);
             case "exit":
                 parser.checkExcess();
                 System.out.println("Cheers.");
