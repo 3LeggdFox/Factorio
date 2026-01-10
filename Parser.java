@@ -121,23 +121,38 @@ public class Parser {
         return new Station(station_name, modules, productivity_bonus, crafting_speed, priority);
     }
 
-    public static Query parseQuery(String line, HashMap<String, Integer> allMaterials) throws ParsingException {
+    public static Query parseQuery(String line, HashMap<String, Integer> allMaterials) {
         Parser parser = new Parser(line);
         boolean verbose = parser.tryEatWord("verbose");
         String firstWord = parser.getWord();
         String topic;
         String material;
         int prod_mod_level;
+        String output;
         switch (firstWord) {
             case "get":
                 String input = parser.getWord();
                 parser.eatWord("in");
-                String output = parser.getWord();
+                output = parser.getWord();
                 prod_mod_level = 0;
                 if (parser.tryEatWord("prod")) {
                     prod_mod_level = (int) (parser.getNumber(true) + 0.5);
                 }
                 return new QuantInQuery(input, output, prod_mod_level, verbose);
+            case "machines":
+                parser.eatWord("in");
+                Double number = parser.tryGetNumber();
+                double number_of_output = 1;
+                if (number != null)
+                {
+                    number_of_output = number;
+                }
+                output = parser.getWord();
+                prod_mod_level = 0;
+                if (parser.tryEatWord("prod")) {
+                    prod_mod_level = (int) (parser.getNumber(true) + 0.5);
+                }
+                return new MachinesQuery(number_of_output, output, prod_mod_level, verbose);
             case "list":
                 material = parser.getWord();
                 return new ListQuery(material, verbose);
@@ -183,7 +198,7 @@ public class Parser {
         return (character >= '0' && character <= '9');
     }
 
-    private String getWord() throws ParsingException {
+    private String getWord() {
         trim();
         int initPos = position;
         while (isWord()) {
@@ -196,11 +211,23 @@ public class Parser {
         return line.substring(initPos, position);
     }
 
-    private double getNumber() throws ParsingException {
+    private String tryGetWord() {
+        trim();
+        int initPos = position;
+        while (isWord()) {
+            position++;
+        }
+        if (initPos == position) {
+            return null;
+        }
+        return line.substring(initPos, position);
+    }
+
+    private double getNumber() {
         return getNumber(false);
     }
 
-    private double getNumber(boolean int_only) throws ParsingException {
+    private double getNumber(boolean int_only) {
         trim();
         int initPos = position;
         while (isNumber()) {
@@ -221,7 +248,30 @@ public class Parser {
         return Double.parseDouble(line.substring(initPos, position));
     }
 
-    private String getNext() throws ParsingException {
+    private Double tryGetNumber() {
+        return tryGetNumber(false);
+    }
+
+    private Double tryGetNumber(boolean int_only) {
+        trim();
+        int initPos = position;
+        while (isNumber()) {
+            position++;
+        }
+        if (!int_only) {
+            if (tryEat('.')) {
+                while (isNumber()) {
+                    position++;
+                }
+            }
+        }
+        if (initPos == position) {
+            return null;
+        }
+        return Double.parseDouble(line.substring(initPos, position));
+    }
+
+    private String getNext() {
         trim();
         int initPos = position;
         while (isWord() || isNumber()) {
@@ -242,7 +292,7 @@ public class Parser {
         return;
     }
 
-    private void eat(char expected) throws ParsingException {
+    private void eat(char expected) {
         trim();
         if (position >= line.length()) {
             throw new ParsingException("Error: Expected '" + expected + "' found end of string.", line, position);
@@ -266,7 +316,7 @@ public class Parser {
         return result;
     }
 
-    private void eatWord(String expected) throws ParsingException {
+    private void eatWord(String expected) {
         String word = getWord();
         if (!expected.equals(word)) {
             throw new ParsingException("Error: Expected '" + expected + "' found '" + word + "'.", line, position - 1);

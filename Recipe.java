@@ -9,7 +9,6 @@ public class Recipe {
     boolean has_req;
     boolean can_prod;
     String alt_name;
-    String station = null;
 
     public Recipe(ArrayList<Material> inputs, ArrayList<Material> outputs, ArrayList<String> stations,
             double crafting_time, boolean has_req, boolean can_prod, String alt_name) {
@@ -124,10 +123,14 @@ public class Recipe {
         return string.toString();
     }
 
-    public String toStringSpecific(Station station, int prod_mod_level) {
-        double craft_speed = station.getSpeed(prod_mod_level);
+    public String toStringSpecific(Station station)
+    {
+        return buildInputOutputString() + ", using " + station.name;
+    }
+
+    public String toStringSpecificVerbose(Station station, int prod_mod_level) {
         StringBuilder string = new StringBuilder("Using Recipe: ");
-        string.append(buildInputOutputString());
+        string.append(toStringSpecific(station));
         int percentage;
         double productivity = station.getProd(prod_mod_level);
         if (can_prod) {
@@ -135,8 +138,8 @@ public class Recipe {
         } else {
             percentage = 0;
         }
-        string.append(", using " + station.name);
         string.append(".\nProductivity: " + percentage + "%");
+        double craft_speed = station.getSpeed(prod_mod_level);
         string.append(String.format(", Crafting Speed: %.3f.", craft_speed));
         return string.toString();
     }

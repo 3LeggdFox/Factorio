@@ -12,7 +12,7 @@ public class RecipeBrowser {
     Scanner stdin;
     HashMap<String, Station> stations;
     HashMap<String, Integer> allMaterials;
-    HashMap<String, HashMap<String, Double>> quantInCache = new HashMap<>();
+    HashMap<String, Double> quantInCache = new HashMap<>();
 
     public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings,
             HashMap<String, Station> stations, String factory, HashMap<String, Integer> allMaterials) {
@@ -88,32 +88,20 @@ public class RecipeBrowser {
         return getUserInt(0, 3);
     }
 
-    public double quantityIn(String input, String output, int prod_mod_level, boolean verbose)
-            throws InvalidMaterialException {
-        if (allMaterials.get(output) == null && !output.equals(output)) {
+    public double quantityIn(String input, String output, int prod_mod_level, boolean verbose) {
+        if (allMaterials.get(output) == null) {
             throw new InvalidMaterialException(output);
         }
-
-        try {
-            double result = quantIn(input, output, prod_mod_level, verbose);
-            quantInCache.clear();
-            return result;
-        } catch (StationNotFoundException e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
-            return 0;
-        }
+        double result = quantIn(input, output, prod_mod_level, verbose);
+        quantInCache.clear();
+        return result;
     }
 
-    private double quantIn(String input, String output, int prod_mod_level, boolean verbose)
-            throws StationNotFoundException {
-        HashMap<String, Double> map;
-        map = quantInCache.get(input);
-        if (map != null) {
-            Double result = map.get(output);
-            if (result != null) {
-                return result;
-            }
+    private double quantIn(String input, String output, int prod_mod_level, boolean verbose) {
+        Double cached = quantInCache.get(output);
+        if (cached != null)
+        {
+            return cached;
         }
         if (input.equals(output)) {
             return 1;
@@ -127,20 +115,14 @@ public class RecipeBrowser {
         Station station = pickStation(recipe);
         double productivity = station.getProd(prod_mod_level);
         if (verbose) {
-            System.out.println(recipe.toStringSpecific(station, prod_mod_level));
+            System.out.println(recipe.toStringSpecificVerbose(station, prod_mod_level));
         }
         double sum = 0;
         for (Material material : recipe.inputs) {
             sum += quantIn(input, material.name, prod_mod_level, verbose) * material.quantity
                     / (recipe.amountOutput(output) * productivity);
         }
-
-        map = quantInCache.get(input);
-        if (map == null) {
-            map = new HashMap<String, Double>();
-        }
-        map.put(output, sum);
-        quantInCache.put(input, map);
+        quantInCache.put(output, sum);
         return sum;
     }
 
@@ -159,6 +141,24 @@ public class RecipeBrowser {
         Recipe recipe = pickRecipe(output, recipes);
         for (Material material : recipe.inputs) {
             baseIngredients(material.name, hash_set);
+        }
+    }
+
+    public ArrayList<String> nonBaseIngredients(String output) {
+        HashSet<String> non_base_ingredients = new HashSet<>();
+        nonBaseIngredients(output, non_base_ingredients);
+        return new ArrayList<>(non_base_ingredients);
+    }
+
+    private void nonBaseIngredients(String output, HashSet<String> hash_set) {
+        ArrayList<Recipe> recipes = findRecipes(output);
+        if (recipes.isEmpty()) {
+            return;
+        }
+        hash_set.add(output);
+        Recipe recipe = pickRecipe(output, recipes);
+        for (Material material : recipe.inputs) {
+            nonBaseIngredients(material.name, hash_set);
         }
     }
 
@@ -227,6 +227,11 @@ public class RecipeBrowser {
             }
         }
         return recipe;
+    }
+
+    public Recipe pickRecipe(String output)
+    {
+        return pickRecipe(output, findRecipes(output));
     }
 
     public Station pickStation(Recipe recipe) throws StationNotFoundException {
@@ -314,7 +319,7 @@ public class RecipeBrowser {
     }
 }
 
-class StationNotFoundException extends RuntimeException {
+class StationNotFoundException extends QueryException {
     Station searchStationName;
 
     public StationNotFoundException(String message, Station searchStationName) {

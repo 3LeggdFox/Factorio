@@ -20,7 +20,7 @@ public class TimeQuery extends Query {
         double crafting_time = recipe.getCraftingTime(station, prod_mod_level);
         if (verbose)
         {
-            System.out.println(recipe.toStringSpecific(station, prod_mod_level));
+            System.out.println(recipe.toStringSpecificVerbose(station, prod_mod_level));
         }
         System.out.println(String.format("Time: %.3f seconds", crafting_time));
     }
