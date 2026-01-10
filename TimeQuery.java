@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class TimeQuery extends Query {
     String material;
     int prod_mod_level;
@@ -15,7 +17,13 @@ public class TimeQuery extends Query {
 
     public void query(RecipeBrowser browser)
     {
-        Recipe recipe = browser.pickRecipe(material, browser.findRecipes(material));
+        ArrayList<Recipe> recipes = browser.findRecipes(material);
+        if (recipes.isEmpty())
+        {
+            System.err.println("Error: '" + material + "' has no crafting recipe.");
+            return;
+        }
+        Recipe recipe = browser.pickRecipe(material, recipes);
         Station station = browser.pickStation(recipe);
         double crafting_time = recipe.getCraftingTime(station, prod_mod_level);
         if (verbose)

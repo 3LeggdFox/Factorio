@@ -32,6 +32,10 @@ public class HelpQuery extends Query {
         System.out.println("    Updates the setting file.");
         System.out.println("    Adds a new setting if the topic has none yet.");
         System.out.println();
+        System.out.println("<number1> <operation> <number2>");
+        System.out.println("    Prints the result of basic mathematical operations.");
+        System.out.println("verbose");
+        System.out.println("    Toggles verbose on/off.");
         System.out.println("help");
         System.out.println("    Lists all commands and usage with syntax.");
         System.out.println();

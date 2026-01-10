@@ -13,6 +13,7 @@ public class RecipeBrowser {
     HashMap<String, Station> stations;
     HashMap<String, Integer> allMaterials;
     HashMap<String, Double> quantInCache = new HashMap<>();
+    boolean toggle_verbose = false;
 
     public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings,
             HashMap<String, Station> stations, String factory, HashMap<String, Integer> allMaterials) {
@@ -272,7 +273,7 @@ public class RecipeBrowser {
     }
 
     public void query(String line) throws ParsingException, InvalidMaterialException {
-        Query query = Parser.parseQuery(line, allMaterials);
+        Query query = Parser.parseQuery(line, toggle_verbose);
         query.query(this);
     }
 

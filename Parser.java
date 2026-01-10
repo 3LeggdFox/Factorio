@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Parser {
     int position;
@@ -14,7 +13,7 @@ public class Parser {
         this.line = line;
     }
 
-    public static Recipe parseRecipe(String line) throws ParsingException {
+    public static Recipe parseRecipe(String line) {
         Parser parser = new Parser(line);
 
         // Collect Outputs
@@ -93,7 +92,7 @@ public class Parser {
         return new Recipe(inputs, outputs, stations, crafting_time, has_req, can_prod, alt_name);
     }
 
-    public static Setting parseSettings(String line) throws ParsingException {
+    public static Setting parseSettings(String line) {
         Parser parser = new Parser(line);
         String topic = parser.getWord();
         parser.eat('=');
@@ -101,7 +100,7 @@ public class Parser {
         return new Setting(topic, setting);
     }
 
-    public static Station parseStations(String line) throws ParsingException {
+    public static Station parseStations(String line) {
         Parser parser = new Parser(line);
         String station_name = parser.getWord();
         parser.eat(':');
@@ -121,15 +120,26 @@ public class Parser {
         return new Station(station_name, modules, productivity_bonus, crafting_speed, priority);
     }
 
-    public static Query parseQuery(String line, HashMap<String, Integer> allMaterials) {
+    public static Query parseQuery(String line, boolean toggle_verbose) {
         Parser parser = new Parser(line);
-        boolean verbose = parser.tryEatWord("verbose");
-        String firstWord = parser.getWord();
+        boolean verbose = parser.tryEatWord("verbose") || toggle_verbose;
+        String first_word = parser.tryGetWord();
+        Double number = 0.0;
+        boolean is_empty = false;
+        if (first_word == null) {
+            number = parser.tryGetNumber();
+            if (number == null) {
+                first_word = "default";
+                is_empty = true;
+            } else {
+                first_word = "math";
+            }
+        }
         String topic;
         String material;
         int prod_mod_level;
         String output;
-        switch (firstWord) {
+        switch (first_word) {
             case "get":
                 String input = parser.getWord();
                 parser.eatWord("in");
@@ -138,13 +148,13 @@ public class Parser {
                 if (parser.tryEatWord("prod")) {
                     prod_mod_level = (int) (parser.getNumber(true) + 0.5);
                 }
+                parser.checkExcess();
                 return new QuantInQuery(input, output, prod_mod_level, verbose);
             case "machines":
                 parser.eatWord("in");
-                Double number = parser.tryGetNumber();
+                number = parser.tryGetNumber();
                 double number_of_output = 1;
-                if (number != null)
-                {
+                if (number != null) {
                     number_of_output = number;
                 }
                 output = parser.getWord();
@@ -152,12 +162,15 @@ public class Parser {
                 if (parser.tryEatWord("prod")) {
                     prod_mod_level = (int) (parser.getNumber(true) + 0.5);
                 }
+                parser.checkExcess();
                 return new MachinesQuery(number_of_output, output, prod_mod_level, verbose);
             case "list":
                 material = parser.getWord();
+                parser.checkExcess();
                 return new ListQuery(material, verbose);
             case "setting":
                 topic = parser.getWord();
+                parser.checkExcess();
                 return new SettingQuery(topic, verbose);
             case "time":
                 material = parser.getWord();
@@ -165,18 +178,30 @@ public class Parser {
                 if (parser.tryEatWord("prod")) {
                     prod_mod_level = (int) (parser.getNumber(true) + 0.5);
                 }
+                parser.checkExcess();
                 return new TimeQuery(material, prod_mod_level, verbose);
             case "update":
                 topic = parser.getWord();
                 parser.eat('=');
                 String setting = parser.getWord();
+                parser.checkExcess();
                 return new UpdateSettingQuery(topic, setting, verbose);
+            case "math":
+                char operation = parser.increment();
+                double number2 = parser.getNumber();
+                parser.checkExcess();
+                return new MathQuery(number, operation, number2);
             case "help":
+                parser.checkExcess();
                 return new HelpQuery(verbose);
             case "exit":
+                parser.checkExcess();
                 System.out.println("Cheers.");
                 System.exit(0);
             default:
+                if (is_empty && verbose) {
+                    return new ToggleVerboseQuery();
+                }
                 throw new ParsingException("Error: Command not recognised.", line, parser.position - 1);
         }
     }
@@ -191,18 +216,31 @@ public class Parser {
     }
 
     private boolean isNumber() {
-        if (line.length() <= position) {
+        if (position >= line.length()) {
             return false;
         }
         char character = line.charAt(position);
         return (character >= '0' && character <= '9');
     }
 
+    private boolean isEnd() {
+        trim();
+        return position >= line.length();
+    }
+
+    private void checkExcess() {
+        if (!isEnd()) {
+            throw new ParsingException("Error: Too many arguments.", line, position);
+        }
+    }
+
     private String getWord() {
         trim();
         int initPos = position;
-        while (isWord()) {
-            position++;
+        if (!isNumber()) {
+            while (isWord()) {
+                position++;
+            }
         }
         if (initPos == position) {
             throw new ParsingException("Error: Expected word.",
@@ -214,8 +252,10 @@ public class Parser {
     private String tryGetWord() {
         trim();
         int initPos = position;
-        while (isWord()) {
-            position++;
+        if (!isNumber()) {
+            while (isWord()) {
+                position++;
+            }
         }
         if (initPos == position) {
             return null;
@@ -323,11 +363,21 @@ public class Parser {
         }
     }
 
+    private char increment() {
+        trim();
+        if (position >= line.length()) {
+            throw new ParsingException("Error: Expected character.", line, position);
+        }
+        return line.charAt(position++);
+    }
+
     private boolean tryEatWord(String expected) {
         trim();
         int initPos = position;
-        while (isWord()) {
-            position++;
+        if (!isNumber()) {
+            while (isWord()) {
+                position++;
+            }
         }
         if (initPos == position) {
             return false;
@@ -336,7 +386,6 @@ public class Parser {
         String word = null;
         try {
             word = getWord();
-
         } catch (ParsingException e) {
             System.out.println("You done fucked up m8.");
         }
