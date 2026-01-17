@@ -3,4 +3,6 @@
 1 green_circuit, 2 iron_stick = 1 iron, 3 cable. Takes 0.5 seconds, can use EMPlant. Uses productivity modules
 1 red_circuit = 2 plastic, 4 cable, 2 green_circuit, 1 wooden_chest. Takes 6 seconds, can use EMPlant. Uses productivity modules
 1 iron, 3 wooden_chest = 1 iron_ore. Takes 3.2 seconds, needs StoneFurnace, SteelFurnace, ElectricFurnace. Uses productivity modules
-1 wooden_chest = 10 wood. Takes 0.5 seconds
+1 wooden_chest(classic) = 10 wood. Takes 0.5 seconds
+2 pentapod_egg = 30 nutrient, 1 pentapod_egg, 60 water. Takes 15 seconds, needs Biochamber. Uses productivity modules
+1 biochamber = 20 iron, 5 green_circuit, 5 nutrient, 1 pentapod_egg, 1 landfill. Takes 20 seconds, needs Assembly2, Assembly3, Biochamber

@@ -17,13 +17,12 @@ public class TimeQuery extends Query {
 
     public void query(RecipeBrowser browser)
     {
-        ArrayList<Recipe> recipes = browser.findRecipes(material);
-        if (recipes.isEmpty())
+        Recipe recipe = browser.pickRecipe(material);
+        if (recipe == null)
         {
             System.err.println("Error: '" + material + "' has no crafting recipe.");
             return;
         }
-        Recipe recipe = browser.pickRecipe(material, recipes);
         Station station = browser.pickStation(recipe);
         double crafting_time = recipe.getCraftingTime(station, prod_mod_level);
         if (verbose)

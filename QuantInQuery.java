@@ -24,7 +24,7 @@ public class QuantInQuery extends Query {
             browser.getBasicIngredients(product, amount, prod_mod_level, verbose);
         } else {
             double result = browser.quantIn(ingredient, product, amount, prod_mod_level, verbose);
-            System.out.println(ingredient + ": " + result);
+            System.out.println(String.format("%s: %.3f", ingredient, result));
         }
     }
 }

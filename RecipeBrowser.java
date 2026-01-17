@@ -12,6 +12,7 @@ public class RecipeBrowser {
     Scanner stdin;
     HashMap<String, Station> stations;
     HashMap<String, Integer> allMaterials;
+    HashSet<String> base_ingredients;
     boolean toggle_verbose = false;
     HashMap<Recipe, Double> steps = new HashMap<>();
     ArrayList<Recipe> recipe_order = new ArrayList<>();
@@ -21,21 +22,17 @@ public class RecipeBrowser {
     HashSet<String> cycle_check = new HashSet<>();
 
     public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings,
-            HashMap<String, Station> stations, String factory, HashMap<String, Integer> allMaterials) {
-        this(recipes, settings, stations, factory, allMaterials, new Scanner(System.in));
-    }
-
-    public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings,
-            HashMap<String, Station> stations, String factory, HashMap<String, Integer> allMaterials, Scanner scanner) {
+            HashMap<String, Station> stations, String factory, HashMap<String, Integer> allMaterials, HashSet<String> base_ingredients, Scanner scanner) {
         this.recipes = recipes;
         this.settings = settings;
         this.stations = stations;
         this.factory = factory;
         this.allMaterials = allMaterials;
+        this.base_ingredients = base_ingredients;
         this.stdin = scanner;
     }
 
-    public ArrayList<Recipe> findRecipes(String material) {
+    private ArrayList<Recipe> findRecipes(String material) {
         ArrayList<Recipe> recipes = new ArrayList<Recipe>();
         for (Recipe recipe : this.recipes) {
             if (recipe.hasOutput(material)) {
@@ -43,10 +40,6 @@ public class RecipeBrowser {
             }
         }
         return recipes;
-    }
-
-    private <T> int giveOptions(Iterable<T> list) {
-        return giveOptions("Decision must be made between:", list);
     }
 
     public void getMachinesIn(String output, double amount, int prod_mod_level, boolean verbose) {
@@ -80,7 +73,7 @@ public class RecipeBrowser {
         for (String material : resources.keySet()) {
             double quantity = resources.get(material);
             if (quantity != 0) {
-                System.out.println(material + ": " + quantity);
+                System.out.println(String.format("%s: %.3f", material, quantity));
             }
         }
         reset();
@@ -94,7 +87,7 @@ public class RecipeBrowser {
         for (String material : all_resources.keySet()) {
             double quantity = all_resources.get(material);
             if (quantity != 0) {
-                System.out.println(material + ": " + quantity);
+                System.out.println(String.format("%s: %.3f", material, quantity));
             }
         }
         reset();
@@ -119,11 +112,15 @@ public class RecipeBrowser {
         double productivity = getProductivity(recipe, station, prod_mod_level);
         double undos = 0;
         boolean can_undo = true;
+        Recipe store_recipe = recipe;
+        if (recipe.has_cycle) {
+            recipe = recipe.getNoCycleClone();
+        }
         while (true) {
             for (Material material : recipe.outputs) {
                 double this_amount = amount * material.quantity / recipe.amountOutput(output);
                 double current_amount = resources.get(material.name);
-                if (current_amount - this_amount > 0)
+                if (current_amount - (this_amount * (undos + 1)) > 0)
                 {
                     can_undo  = false;
                 }
@@ -134,12 +131,12 @@ public class RecipeBrowser {
                 break;
             }
         }
-        double recipe_count = steps.get(recipe);
+        double recipe_count = steps.getOrDefault(store_recipe, 0.0);
         if (undos >= recipe_count) {
             undos = recipe_count;
             recipe_order.remove(recipe);
         }
-        steps.put(recipe, recipe_count - undos);
+        steps.put(store_recipe, recipe_count - undos);
         for (int i = 0; i < undos; ++i) {
             for (Material material : recipe.outputs) {
                 double this_amount = amount * material.quantity / recipe.amountOutput(output);
@@ -189,14 +186,18 @@ public class RecipeBrowser {
             required_resources.remove(output);
             return;
         }
-        Station station = pickStation(recipe);
-        double productivity = getProductivity(recipe, station, prod_mod_level);
-        double recipe_completions = amount / (recipe.amountOutput(output) * productivity);
         if (!steps.containsKey(recipe)) {
             recipe_order.add(recipe);
         }
-        double recipe_count = steps.getOrDefault(recipe, 0.0) + recipe_completions;
-        steps.put(recipe, recipe_count);
+        Station station = pickStation(recipe);
+        double productivity = getProductivity(recipe, station, prod_mod_level);
+        Recipe store_recipe = recipe;
+        if (recipe.has_cycle) {
+            recipe = recipe.getNoCycleClone();
+        }
+        double recipe_completions = amount / (recipe.amountOutput(output) * productivity);
+        double recipe_count = steps.getOrDefault(store_recipe, 0.0) + recipe_completions;
+        steps.put(store_recipe, recipe_count);
         for (Material material : recipe.inputs) {
             double this_amount = recipe_completions * material.quantity;
             if (resources.containsKey(material.name)) {
@@ -241,12 +242,21 @@ public class RecipeBrowser {
 
     }
 
-    private <T> int giveOptions(String heading, Iterable<T> list) {
+    private <T> int giveOptions(Iterable<T> list, boolean is_base_resource) {
+        return giveOptions("Decision must be made between:", list, is_base_resource);
+    }
+
+    private <T> int giveOptions(String heading, Iterable<T> list, boolean is_base_resource) {
         System.out.println(heading);
         int counter = 0;
         for (T element : list) {
             System.out.print(counter + ": ");
             System.out.println(element);
+            counter++;
+        }
+        if (is_base_resource) {
+            System.out.print(counter + ": ");
+            System.out.println("Basic Resource");
             counter++;
         }
         return counter;
@@ -367,21 +377,29 @@ public class RecipeBrowser {
         }
     }
 
-    public Recipe pickRecipe(String output, ArrayList<Recipe> recipes) {
-        if (recipes.size() == 1) {
-            return recipes.get(0);
-        }
+    private Recipe pickRecipe(String output, ArrayList<Recipe> recipes) {
         if (recipes.size() == 0) {
             return null;
+        }
+        if (recipes.size() == 1 && !base_ingredients.contains(output)) {
+            return recipes.get(0);
         }
         Setting setting = settings.get(output);
         Recipe recipe = null;
         if (setting == null) {
-            int counter = giveOptions(recipes);
+            int counter = giveOptions(recipes, base_ingredients.contains(output));
             int userIn = getUserInt(0, counter);
-            recipe = recipes.get(userIn);
+            if (userIn == recipes.size()) {
+                addNewSetting(new Setting(output, "basic"));
+                return null;
+            } else {
+                recipe = recipes.get(userIn);
+            }
             addNewSetting(new Setting(output, recipe.alt_name));
         } else {
+            if (setting.value.equals("basic")) {
+                return null;
+            }
             for (Recipe r : recipes) {
                 if (r.alt_name.equals(setting.value) || (r.alt_name == null && setting.value.equals("default"))) {
                     recipe = r;
@@ -396,7 +414,7 @@ public class RecipeBrowser {
         return pickRecipe(output, findRecipes(output));
     }
 
-    public Station pickStation(Recipe recipe) throws StationNotFoundException {
+    public Station pickStation(Recipe recipe) {
         Station station = null;
         int highestPrio = -1;
         ArrayList<String> allowedStations = (ArrayList<String>) recipe.stations.clone();
@@ -408,17 +426,19 @@ public class RecipeBrowser {
                 addNewSetting(setting);
             }
             if (setting.value.equals("1")) {
-                Station searchStation = stations.get(station_name);
-                if (searchStation == null) {
+                Station search_station = stations.get(station_name);
+                if (search_station == null) {
                     throw new StationNotFoundException("Error: Recipe uses station not found in station.txt.",
-                            searchStation);
+                            station_name, true);
                 }
-                if (searchStation.priority > highestPrio) {
-                    station = searchStation;
-                    highestPrio = searchStation.priority;
+                if (search_station.priority > highestPrio) {
+                    station = search_station;
+                    highestPrio = search_station.priority;
                 }
             }
-
+        }
+        if (station == null) {
+            throw new StationNotFoundException("Error: Factory does not have a required Station.", recipe.toString(), false);
         }
         return station;
     }
@@ -482,16 +502,22 @@ public class RecipeBrowser {
 }
 
 class StationNotFoundException extends QueryException {
-    Station searchStationName;
+    String searchStationName;
+    boolean not_real_station;
 
-    public StationNotFoundException(String message, Station searchStationName) {
+    public StationNotFoundException(String message, String search_station_name, boolean not_real_station) {
         super(message);
-        this.searchStationName = searchStationName;
+        this.searchStationName = search_station_name;
+        this.not_real_station = not_real_station;
     }
 
     public String getMessage() {
         StringBuilder builder = new StringBuilder(super.getMessage());
-        builder.append("Searched for '" + searchStationName + "'.");
+        if (not_real_station) {
+            builder.append("Searched for '" + searchStationName + "'.");
+        } else {
+            builder.append(searchStationName);
+        }
         return builder.toString();
     }
 }

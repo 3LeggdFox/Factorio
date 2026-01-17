@@ -198,7 +198,7 @@ public class Parser {
                 String setting = parser.tryGetWord();
                 if (setting == null)
                 {
-                    setting = parser.tryGetNumber().toString();
+                    setting = String.valueOf((int) parser.getNumber());
                     if (setting == null)
                     {
                         parser.getWord();

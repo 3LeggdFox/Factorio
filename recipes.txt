@@ -202,7 +202,7 @@
 1 solid_fuel(ammonia) = 15 ammonia, 6 crude_oil. Takes 0.5 seconds, needs ChemicalPlant, CryogenicPlant. Uses productivity modules
 1 rocket_fuel(ammonia) = 10 solid_fuel, 50 water, 500 ammonia. Takes 10 seconds, needs ChemicalPlant, CryogenicPlant. Uses productivity modules
 50 fluoroketone_hot = 1 solid_fuel, 1 lithium, 50 flourine, 50 ammonia. Takes 10 seconds, needs CryogenicPlant. Uses productivity modules
-10 fluoroketone_cold = 10 fluoroketone_hot. Takes 5 seconds, needs CryogenicPlant. Uses productivity modules
+10 fluoroketone_cold = 10 fluoroketone_hot. Takes 5 seconds, needs CryogenicPlant
 5 lithium = 1 holmium, 50 lithium_brine, 50 ammonia. Takes 20 seconds, needs ChemicalPlant, CryogenicPlant. Uses productivity modules
 1 lithium_plate = 1 lithium. Takes 6.4 seconds, needs StoneFurnace, SteelFurnace, ElectricFurnace. Uses productivity modules
 1 quantum_processor(processor), 5 fluoroketone_hot(processor) = 1 blue_circuit, 1 tungsten_carbide, 1 superconductor, 1 carbon_fiber, 2 lithium_plate, 10 fluoroketone_cold. Takes 30 seconds, needs EMPlant. Uses productivity modules

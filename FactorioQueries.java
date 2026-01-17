@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
@@ -56,7 +57,15 @@ public class FactorioQueries {
             }
             scanner.close();
 
-            return new RecipeBrowser(recipes, settings, stations, factory, allMaterials, scanInp);
+            file = new File("base.txt");
+            scanner = new Scanner(file);
+            HashSet<String> base_ingredients = new HashSet<>();
+            while (scanner.hasNextLine()) {
+                base_ingredients.add(scanner.nextLine());
+            }
+            scanner.close();
+
+            return new RecipeBrowser(recipes, settings, stations, factory, allMaterials, base_ingredients, scanInp);
         } catch (FileNotFoundException e) {
             System.err.println(e.getMessage());
             System.exit(1);

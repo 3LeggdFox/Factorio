@@ -9,6 +9,7 @@ public class Recipe {
     boolean has_req;
     boolean can_prod;
     String alt_name;
+    boolean has_cycle = false;
 
     public Recipe(ArrayList<Material> inputs, ArrayList<Material> outputs, ArrayList<String> stations,
             double crafting_time, boolean has_req, boolean can_prod, String alt_name) {
@@ -19,6 +20,13 @@ public class Recipe {
         this.has_req = has_req;
         this.can_prod = can_prod;
         this.alt_name = alt_name;
+        for (Material material : inputs) {
+            if (hasOutput(material.name)) {
+                this.has_cycle = true;
+                return;
+            }
+        }
+
     }
 
     public double amountOutput(String material) {
@@ -54,6 +62,29 @@ public class Recipe {
             }
         }
         return false;
+    }
+
+    public Recipe getNoCycleClone() {
+        ArrayList<Material> new_inputs = new ArrayList<>();
+        ArrayList<Material> new_outputs = new ArrayList<>();
+        ArrayList<String> new_stations = new ArrayList<>();
+        for (Material output : outputs) {
+            Material new_output = new Material(output.quantity, output.name);
+            if (hasInput(output.name)) {
+                new_output.quantity -= amountInput(output.name);
+            }
+            new_outputs.add(new_output);
+        }
+        for (Material input : inputs) {
+            if (!hasOutput(input.name)) {
+                Material new_input = new Material(input.quantity, input.name);
+                new_inputs.add(new_input);
+            }
+        }
+        for (String station : stations) {
+            new_stations.add(station);
+        }
+        return new Recipe(new_inputs, new_outputs, new_stations, crafting_time, has_req, can_prod, alt_name);
     }
 
     public String toString() {
