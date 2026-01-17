@@ -23,8 +23,24 @@ public class QuantInQuery extends Query {
         } else if (ingredient.equals("base")) {
             browser.getBasicIngredients(product, amount, prod_mod_level, verbose);
         } else {
-            double result = browser.quantIn(ingredient, product, amount, prod_mod_level, verbose);
-            System.out.println(String.format("%s: %.3f", ingredient, result));
+            boolean ingredient_is_real = browser.all_materials.contains(ingredient);
+            boolean product_is_real = browser.all_materials.contains(product);
+            if (ingredient_is_real && product_is_real) {
+                double result = browser.quantIn(ingredient, product, amount, prod_mod_level, verbose);
+                System.out.println(String.format("%s: %.3f", ingredient, result));
+            } else {
+                String offender = "";
+                if (!ingredient_is_real) {
+                    offender = ingredient;
+                }
+                if (!product_is_real) {
+                    if (!ingredient_is_real) {
+                        offender += "' and '";
+                    }
+                    offender += product;
+                }
+                System.err.println("Error: '" + offender + "' not found in material list.");
+            }
         }
     }
 }

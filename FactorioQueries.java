@@ -23,17 +23,17 @@ public class FactorioQueries {
 
     static RecipeBrowser initialiseBrowser(String factory, Scanner scanInp) {
         try {
-            File file = new File("recipes2.txt");
+            File file = new File("recipes.txt");
             Scanner scanner = new Scanner(file);
             ArrayList<Recipe> recipes = new ArrayList<Recipe>();
-            HashMap<String, Integer> allMaterials = new HashMap<String, Integer>();
+            HashSet<String> allMaterials = new HashSet<>();
             while (scanner.hasNextLine()) {
                 Recipe recipe = Parser.parseRecipe(scanner.nextLine());
                 for (Material input : recipe.inputs) {
-                    allMaterials.put(input.name, 1);
+                    allMaterials.add(input.name);
                 }
                 for (Material output : recipe.outputs) {
-                    allMaterials.put(output.name, 1);
+                    allMaterials.add(output.name);
                 }
                 recipes.add(recipe);
             }
@@ -64,8 +64,9 @@ public class FactorioQueries {
                 base_ingredients.add(scanner.nextLine());
             }
             scanner.close();
-
-            return new RecipeBrowser(recipes, settings, stations, factory, allMaterials, base_ingredients, scanInp);
+            RecipeBrowser browser = new RecipeBrowser(recipes, settings, stations, factory, allMaterials, base_ingredients, scanInp);
+            browser.initCheckCycle();
+            return browser;
         } catch (FileNotFoundException e) {
             System.err.println(e.getMessage());
             System.exit(1);

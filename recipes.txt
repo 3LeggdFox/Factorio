@@ -132,6 +132,7 @@
 1 solid_fuel(heavy) = 20 heavy_oil. Takes 1 seconds, needs ChemicalPlant. Uses productivity modules
 10000 steam = 1 calcite, 1000 sulfuric_acid. Takes 5 seconds, needs ChemicalPlant, CryogenicPlant. Uses productivity modules
 90 water = 1000 steam. Takes 1 seconds, needs ChemicalPlant, CryogenicPlant. Uses productivity modules
+60 steam(boiling) = 6 water. Takes 1 seconds, needs Boiler, HeatExchanger
 20 water(melting) = 1 ice. Takes 1 seconds, needs ChemicalPlant. Uses productivity modules
 1 iron = 1 iron_ore. Takes 3.2 seconds, needs StoneFurnace, SteelFurnace, ElectricFurnace. Uses productivity modules
 1 copper = 1 copper_ore. Takes 3.2 seconds, needs StoneFurnace, SteelFurnace, ElectricFurnace. Uses productivity modules

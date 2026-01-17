@@ -11,7 +11,7 @@ public class RecipeBrowser {
     String factory;
     Scanner stdin;
     HashMap<String, Station> stations;
-    HashMap<String, Integer> allMaterials;
+    HashSet<String> all_materials;
     HashSet<String> base_ingredients;
     boolean toggle_verbose = false;
     HashMap<Recipe, Double> steps = new HashMap<>();
@@ -22,12 +22,12 @@ public class RecipeBrowser {
     HashSet<String> cycle_check = new HashSet<>();
 
     public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings,
-            HashMap<String, Station> stations, String factory, HashMap<String, Integer> allMaterials, HashSet<String> base_ingredients, Scanner scanner) {
+            HashMap<String, Station> stations, String factory, HashSet<String> allMaterials, HashSet<String> base_ingredients, Scanner scanner) {
         this.recipes = recipes;
         this.settings = settings;
         this.stations = stations;
         this.factory = factory;
-        this.allMaterials = allMaterials;
+        this.all_materials = allMaterials;
         this.base_ingredients = base_ingredients;
         this.stdin = scanner;
     }
@@ -242,8 +242,8 @@ public class RecipeBrowser {
 
     }
 
-    private <T> int giveOptions(Iterable<T> list, boolean is_base_resource) {
-        return giveOptions("Decision must be made between:", list, is_base_resource);
+    private <T> int giveOptions(Iterable<T> list, boolean is_base_resource, String material) {
+        return giveOptions("Decision concerning '" + material + "' must be made between:", list, is_base_resource);
     }
 
     private <T> int giveOptions(String heading, Iterable<T> list, boolean is_base_resource) {
@@ -377,30 +377,30 @@ public class RecipeBrowser {
         }
     }
 
-    private Recipe pickRecipe(String output, ArrayList<Recipe> recipes) {
-        if (recipes.size() == 0) {
+    private Recipe pickRecipe(String output, ArrayList<Recipe> recipe_options) {
+        if (recipe_options.size() == 0) {
             return null;
         }
-        if (recipes.size() == 1 && !base_ingredients.contains(output)) {
-            return recipes.get(0);
+        if (recipe_options.size() == 1 && !base_ingredients.contains(output)) {
+            return recipe_options.get(0);
         }
         Setting setting = settings.get(output);
         Recipe recipe = null;
         if (setting == null) {
-            int counter = giveOptions(recipes, base_ingredients.contains(output));
+            int counter = giveOptions(recipe_options, base_ingredients.contains(output), output);
             int userIn = getUserInt(0, counter);
-            if (userIn == recipes.size()) {
+            if (userIn == recipe_options.size()) {
                 addNewSetting(new Setting(output, "basic"));
                 return null;
             } else {
-                recipe = recipes.get(userIn);
+                recipe = recipe_options.get(userIn);
             }
             addNewSetting(new Setting(output, recipe.alt_name));
         } else {
             if (setting.value.equals("basic")) {
                 return null;
             }
-            for (Recipe r : recipes) {
+            for (Recipe r : recipe_options) {
                 if (r.alt_name.equals(setting.value) || (r.alt_name == null && setting.value.equals("default"))) {
                     recipe = r;
                     break;
@@ -408,6 +408,27 @@ public class RecipeBrowser {
             }
         }
         return recipe;
+    }
+
+    private String chooseRecipe(String material) {
+        ArrayList<Recipe> recipe_options = findRecipes(material);
+        int counter = giveOptions(recipe_options, base_ingredients.contains(material), material);
+        int userIn = getUserInt(0, counter);
+        String recipe_name;
+        if (userIn == recipe_options.size()) {
+            recipe_name = "basic";
+        } else {
+            recipe_name = recipe_options.get(userIn).alt_name;
+        }
+        addNewSetting(new Setting(material, recipe_name), false);
+        return recipe_name;
+    }
+
+    private String getRecipeOrChoose(String setting_name) {
+        if (settings.containsKey(setting_name)) {
+            return settings.get(setting_name).topic;
+        }
+        return chooseRecipe(setting_name);
     }
 
     public Recipe pickRecipe(String output) {
@@ -458,8 +479,45 @@ public class RecipeBrowser {
         query.query(this);
     }
 
+    public void initCheckCycle() {
+        if (checkCycle()) {
+            addNewSetting(new Setting("water", "basic"));
+            addNewSetting(new Setting("coal", "basic"));
+        }
+    }
+
+    private boolean checkCycle() {
+        String water = getRecipeOrChoose("water");
+        String steam = getRecipeOrChoose("steam");
+        String acid = getRecipeOrChoose("sulfuric_acid");
+        String coal = getRecipeOrChoose("coal");
+        String carbon = getRecipeOrChoose("carbon");
+        boolean cycle = false;
+        if (water.equals("default") && steam.equals("boiling")) {
+            cycle = true;
+        }
+        if (water.equals("default") && steam.equals("default") && acid.equals("default")) {
+            cycle = true;
+        }
+        if (coal.equals("default") && carbon.equals("default")) {
+            cycle = true;
+        }
+        return cycle;
+    }
+
     private void addNewSetting(Setting setting) {
+        addNewSetting(setting, true);
+    }
+
+    private void addNewSetting(Setting setting, boolean check_cycle) {
+        Setting initial = settings.get(setting.topic);
         settings.put(setting.topic, setting);
+        if (check_cycle) {
+            if (checkCycle()) {
+                settings.put(setting.topic, initial);
+                throw new CycleException(setting.topic);
+            }
+        }
         try (FileWriter writer = new FileWriter(factory, true)) {
             writer.write("\n");
             writer.write(setting.toString());
@@ -530,6 +588,6 @@ class InvalidMaterialException extends QueryException {
 
 class CycleException extends QueryException {
     public CycleException(String material) {
-        super("Error: '" + material + "' recipe contains a cycle.");
+        super("Error: New '" + material + "' setting created a cycle.");
     }
 }
