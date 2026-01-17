@@ -173,7 +173,7 @@ public class Recipe {
         }
         double productivity = station.getProd(prod_mod_level);
         percentage = (int) (productivity * 100 - 100 + 0.5);
-        string.append(".\nProductivity: " + percentage + "%");
+        string.append("\nProductivity: " + percentage + "%");
         double craft_speed = station.getSpeed(prod_mod_level);
         string.append(String.format(", Crafting Speed: %.3f.", craft_speed));
         return string.toString();

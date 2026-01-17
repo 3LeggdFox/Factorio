@@ -84,6 +84,8 @@ public class HelpQuery extends Query {
     {
         System.out.println("list <material>");
         System.out.println("    Lists all recipes involving material.");
+        System.out.println("    Using material 'recipes' returns all recipes.");
+        System.out.println("    Using material 'settings' returns all settings.");
         System.out.println();
     }
 

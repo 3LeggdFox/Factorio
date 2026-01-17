@@ -333,6 +333,18 @@ public class RecipeBrowser {
     }
 
     public void listQuery(String item, boolean verbose) {
+        if (item.equals("recipes")) {
+            for (Recipe recipe : recipes) {
+                System.out.println(recipe);
+            }
+            return;
+        }
+        if (item.equals("settings")) {
+            for (Setting setting : settings.values()) {
+                System.out.println(setting);
+            }
+            return;
+        }
         ArrayList<Recipe> isInput = new ArrayList<Recipe>();
         ArrayList<Recipe> isOutput = new ArrayList<Recipe>();
         ArrayList<Recipe> isStation = new ArrayList<Recipe>();
