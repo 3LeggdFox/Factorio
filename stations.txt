@@ -2,4 +2,14 @@ Assembly1: 0 modules, 0% productivity, 0.5 crafting speed, 1 prio
 Assembly2: 2 modules, 0% productivity, 0.75 crafting speed, 2 prio
 Assembly3: 4 modules, 0% productivity, 1.25 crafting speed, 3 prio
 Foundry: 4 modules, 50% productivity, 4 crafting speed, 4 prio
-EM: 4 modules, 50% productivity, 2 crafting speed, 4 prio
+EMPlant: 4 modules, 50% productivity, 2 crafting speed, 4 prio
+StoneFurnace: 0 modules, 0% productivity, 1 crafting speed, 1 prio
+SteelFurnace: 0 modules, 0% productivity, 2 crafting speed, 2 prio
+ElectricFurnace: 2 modules, 0% productivity, 2 crafting speed, 3 prio
+Biochamber: 4 modules, 50% productivity, 2 crafting speed, 4 prio
+CryogenicPlant: 8 modules, 0% productivity, 2 crafting speed, 4 prio
+OilRefinery: 3 modules, 0% productivity, 1 crafting speed, 1 prio
+ChemicalPlant: 3 modules, 0% productivity, 1 crafting speed, 1 prio
+Centrifuge: 2 modules, 0% productivity, 1 crafting speed, 1 prio
+Recycler: 4 modules, 0% productivity, 0.5 crafting speed, 1 prio
+Time: 0 modules, 0% productivity, 1 crafting speed, 1 prio

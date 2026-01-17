@@ -1,37 +1,30 @@
 
 public class QuantInQuery extends Query {
-    String input;
-    String output;
+    String ingredient;
+    String product;
+    double amount;
     int prod_mod_level;
 
-    public QuantInQuery(String input, String output, int prod_mod_level, boolean verbose) {
+    public QuantInQuery(String ingredient, String product, double amount, int prod_mod_level, boolean verbose) {
         if (prod_mod_level < 0 || prod_mod_level > 3)
         {
             throw new InvalidModuleLevelException(prod_mod_level);
         }
-        this.input = input;
-        this.output = output;
+        this.ingredient = ingredient;
+        this.product = product;
         this.prod_mod_level = prod_mod_level;
         this.verbose = verbose;
+        this.amount = amount;
     }
 
     public void query(RecipeBrowser browser) {
-        if (input.equals("all")) {
-            boolean first = true;
-            for (String base_ingredient : browser.baseIngredients(output)) {
-                if (!first && verbose) {
-                    System.out.println();
-                } else {
-                    first = false;
-                }
-                double result = browser.quantityIn(base_ingredient, output, prod_mod_level, verbose);
-                System.out.print(base_ingredient + ": ");
-                System.out.println(String.format("%.3f", result));
-            }
+        if (ingredient.equals("all")) {
+            browser.getAllIngredients(product, amount, prod_mod_level, verbose);
+        } else if (ingredient.equals("base")) {
+            browser.getBasicIngredients(product, amount, prod_mod_level, verbose);
         } else {
-            double result = browser.quantityIn(input, output, prod_mod_level, verbose);
-            System.out.print(input + ": ");
-            System.out.println(String.format("%.3f", result));
+            double result = browser.quantIn(ingredient, product, amount, prod_mod_level, verbose);
+            System.out.println(ingredient + ": " + result);
         }
     }
 }

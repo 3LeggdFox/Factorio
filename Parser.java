@@ -23,13 +23,21 @@ public class Parser {
         String alt_name = "default";
         ArrayList<String> stations = new ArrayList<String>();
         boolean has_req = false;
-        boolean can_prod = true;
+        boolean can_prod = false;
         do {
             quantity = parser.getNumber();
             material = parser.getWord();
             outputs.add(new Material(quantity, material));
             if (parser.tryEat('(')) {
-                alt_name = parser.getWord();
+                String name = parser.getWord();
+                if (!alt_name.equals("default"))
+                {
+                    if (!alt_name.equals(name))
+                    {
+                        throw new ParsingException("Error: Alternate Recipe name not consistent.", line, parser.position);
+                    }
+                }
+                alt_name = name;
                 parser.eat(')');
             }
         } while (parser.tryEat(','));
@@ -76,10 +84,11 @@ public class Parser {
             }
 
             // Check if can use productivity modules
-            if (parser.tryEatWord("no")) {
+            if (parser.tryEat('.')) {
+                parser.eatWord("Uses");
                 parser.eatWord("productivity");
                 parser.eatWord("modules");
-                can_prod = false;
+                can_prod = true;
             }
         }
 
@@ -143,19 +152,22 @@ public class Parser {
             case "get":
                 String input = parser.getWord();
                 parser.eatWord("in");
+                number = parser.tryGetNumber();
+                if (number == null) {
+                    number = 1.0;
+                }
                 output = parser.getWord();
                 prod_mod_level = 0;
                 if (parser.tryEatWord("prod")) {
                     prod_mod_level = (int) (parser.getNumber(true) + 0.5);
                 }
                 parser.checkExcess();
-                return new QuantInQuery(input, output, prod_mod_level, verbose);
+                return new QuantInQuery(input, output, number, prod_mod_level, verbose);
             case "machines":
                 parser.eatWord("in");
                 number = parser.tryGetNumber();
-                double number_of_output = 1;
-                if (number != null) {
-                    number_of_output = number;
+                if (number == null) {
+                    number = 1.0;
                 }
                 output = parser.getWord();
                 prod_mod_level = 0;
@@ -163,7 +175,7 @@ public class Parser {
                     prod_mod_level = (int) (parser.getNumber(true) + 0.5);
                 }
                 parser.checkExcess();
-                return new MachinesQuery(number_of_output, output, prod_mod_level, verbose);
+                return new MachinesQuery(output, number, prod_mod_level, verbose);
             case "list":
                 material = parser.getWord();
                 parser.checkExcess();
@@ -183,7 +195,15 @@ public class Parser {
             case "update":
                 topic = parser.getWord();
                 parser.eat('=');
-                String setting = parser.getWord();
+                String setting = parser.tryGetWord();
+                if (setting == null)
+                {
+                    setting = parser.tryGetNumber().toString();
+                    if (setting == null)
+                    {
+                        parser.getWord();
+                    }
+                }
                 parser.checkExcess();
                 return new UpdateSettingQuery(topic, setting, verbose);
             case "math":
@@ -411,7 +431,11 @@ class ParsingException extends QueryException {
     public String getMessage() {
         StringBuilder builder = new StringBuilder(super.getMessage());
         builder.append("\n" + offender + "\n");
-        String positionString = " ".repeat(position) + "^";
+        String positionString = "";
+        if (position >= 0)
+        {
+            positionString = " ".repeat(position) + "^";
+        }
         builder.append(positionString);
         return builder.toString();
     }

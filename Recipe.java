@@ -84,13 +84,18 @@ public class Recipe {
         }
 
         // Productivity tag
-        if (!can_prod) {
-            string.append(", no productivity modules");
+        if (can_prod) {
+            string.append(". Uses productivity modules");
         }
         return string.toString();
     }
 
-    private String buildInputOutputString() {
+    private String buildInputOutputString()
+    {
+        return buildInputOutputString(true);
+    }
+
+    private String buildInputOutputString(boolean show_alt_name) {
         StringBuilder string = new StringBuilder();
         boolean first = true;
         for (Material output : this.outputs) {
@@ -100,7 +105,7 @@ public class Recipe {
             } else {
                 string.append(", " + output.toString());
             }
-            if (!alt_name.equals("default")) {
+            if (!alt_name.equals("default") && show_alt_name) {
                 string.append("(" + alt_name + ")");
             }
         }
@@ -125,19 +130,18 @@ public class Recipe {
 
     public String toStringSpecific(Station station)
     {
-        return buildInputOutputString() + ", using " + station.name;
+        return buildInputOutputString(false) + ", using " + station.name + ".";
     }
 
     public String toStringSpecificVerbose(Station station, int prod_mod_level) {
         StringBuilder string = new StringBuilder("Using Recipe: ");
         string.append(toStringSpecific(station));
         int percentage;
-        double productivity = station.getProd(prod_mod_level);
-        if (can_prod) {
-            percentage = (int) (productivity * 100 - 100 + 0.5);
-        } else {
-            percentage = 0;
+        if (!can_prod) {
+            prod_mod_level = 0;
         }
+        double productivity = station.getProd(prod_mod_level);
+        percentage = (int) (productivity * 100 - 100 + 0.5);
         string.append(".\nProductivity: " + percentage + "%");
         double craft_speed = station.getSpeed(prod_mod_level);
         string.append(String.format(", Crafting Speed: %.3f.", craft_speed));

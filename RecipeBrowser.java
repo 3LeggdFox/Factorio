@@ -12,8 +12,13 @@ public class RecipeBrowser {
     Scanner stdin;
     HashMap<String, Station> stations;
     HashMap<String, Integer> allMaterials;
-    HashMap<String, Double> quantInCache = new HashMap<>();
     boolean toggle_verbose = false;
+    HashMap<Recipe, Double> steps = new HashMap<>();
+    ArrayList<Recipe> recipe_order = new ArrayList<>();
+    HashMap<String, Double> resources = new HashMap<>();
+    HashMap<String, Double> all_resources = new HashMap<>();
+    ArrayList<String> required_resources = new ArrayList<>();
+    HashSet<String> cycle_check = new HashSet<>();
 
     public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings,
             HashMap<String, Station> stations, String factory, HashMap<String, Integer> allMaterials) {
@@ -40,11 +45,203 @@ public class RecipeBrowser {
         return recipes;
     }
 
-    public <T> int giveOptions(Iterable<T> list) {
+    private <T> int giveOptions(Iterable<T> list) {
         return giveOptions("Decision must be made between:", list);
     }
 
-    public <T> int giveOptions(String heading, Iterable<T> list) {
+    public void getMachinesIn(String output, double amount, int prod_mod_level, boolean verbose) {
+        getRecipesIn(output, amount, prod_mod_level);
+        boolean first = true;
+        for (Recipe recipe : steps.keySet()) {
+            if (!first) {
+                System.out.println();
+            } else {
+                first = false;
+            }
+            Station station = pickStation(recipe);
+            double crafting_time = recipe.getCraftingTime(station, prod_mod_level);
+            double machines = steps.get(recipe) * crafting_time;
+            if (verbose) {
+                String station_string = recipe.toStringSpecificVerbose(station, prod_mod_level);
+                System.out.println(String.format("%s\nNeed: %.3f %ss", station_string, machines, station.name));
+            } else {
+                machines = Math.ceil(machines);
+                System.out.println(String.format("Using Recipe: %s\nNeed: %.0f %ss", recipe.toStringSpecific(station), machines, station.name));
+            }
+        }
+        reset();
+    }
+
+    public void getBasicIngredients(String output, double amount, int prod_mod_level, boolean verbose) {
+        getRecipesIn(output, amount, prod_mod_level);
+        if (verbose) {
+            printRecipePath(prod_mod_level);
+        }
+        for (String material : resources.keySet()) {
+            double quantity = resources.get(material);
+            if (quantity != 0) {
+                System.out.println(material + ": " + quantity);
+            }
+        }
+        reset();
+    }
+
+    public void getAllIngredients(String output, double amount, int prod_mod_level, boolean verbose) {
+        getRecipesIn(output, amount, prod_mod_level);
+        if (verbose) {
+            printRecipePath(prod_mod_level);
+        }
+        for (String material : all_resources.keySet()) {
+            double quantity = all_resources.get(material);
+            if (quantity != 0) {
+                System.out.println(material + ": " + quantity);
+            }
+        }
+        reset();
+    }
+
+    public double quantIn(String ingredient, String product, double amount, int prod_mod_level, boolean verbose) {
+        getRecipesIn(product, amount, prod_mod_level);
+        double result = all_resources.getOrDefault(ingredient, 0.0);
+        if (verbose) {
+            printRecipePath(prod_mod_level);
+        }
+        reset();
+        return result;
+    }
+
+    private void clearUnecessary(String output, double amount, int prod_mod_level) {
+        Recipe recipe = pickRecipe(output);
+        if (recipe == null) {
+            return;
+        }
+        Station station = pickStation(recipe);
+        double productivity = getProductivity(recipe, station, prod_mod_level);
+        double undos = 0;
+        boolean can_undo = true;
+        while (true) {
+            for (Material material : recipe.outputs) {
+                double this_amount = amount * material.quantity / recipe.amountOutput(output);
+                double current_amount = resources.get(material.name);
+                if (current_amount - this_amount > 0)
+                {
+                    can_undo  = false;
+                }
+            }
+            if (can_undo) {
+                undos++;
+            } else {
+                break;
+            }
+        }
+        double recipe_count = steps.get(recipe);
+        if (undos >= recipe_count) {
+            undos = recipe_count;
+            recipe_order.remove(recipe);
+        }
+        steps.put(recipe, recipe_count - undos);
+        for (int i = 0; i < undos; ++i) {
+            for (Material material : recipe.outputs) {
+                double this_amount = amount * material.quantity / recipe.amountOutput(output);
+                double current_amount = resources.get(material.name);
+                resources.put(material.name, current_amount - this_amount);
+                all_resources.put(material.name, all_resources.get(material.name) - this_amount);
+            }
+            for (Material material : recipe.inputs) {
+                double this_amount = amount * material.quantity / (recipe.amountOutput(output) / productivity);
+                double current_amount = resources.get(material.name);
+                resources.put(material.name, current_amount + this_amount);
+                all_resources.put(material.name, all_resources.get(material.name) + this_amount);
+                if (current_amount + this_amount < 0) {
+                    clearUnecessary(material.name, current_amount + this_amount, prod_mod_level);
+                }
+            }
+        }
+    }
+
+    private void printRecipePath(int prod_mod_level) {
+        for (Recipe recipe : recipe_order) {
+            Station station = pickStation(recipe);
+            System.out.println(recipe.toStringSpecificVerbose(station, prod_mod_level));
+        }
+    }
+
+    private void getRecipesIn(String output, double amount, int prod_mod_level) {
+        resources.put(output, amount);
+        all_resources.put(output, amount);
+        required_resources.add(output);
+        while (!required_resources.isEmpty()) {
+            String material = required_resources.get(0);
+            double still_need = resources.get(material);
+            addRecipes(material, still_need, prod_mod_level);
+        }
+        for (String material : resources.keySet()) {
+            double quantity = resources.get(material);
+            if (quantity < 0) {
+                clearUnecessary(material, quantity, prod_mod_level);
+            }
+        }
+    }
+
+    private void addRecipes(String output, double amount, int prod_mod_level) {
+        Recipe recipe = pickRecipe(output);
+        if (recipe == null) {
+            required_resources.remove(output);
+            return;
+        }
+        Station station = pickStation(recipe);
+        double productivity = getProductivity(recipe, station, prod_mod_level);
+        double recipe_completions = amount / (recipe.amountOutput(output) * productivity);
+        if (!steps.containsKey(recipe)) {
+            recipe_order.add(recipe);
+        }
+        double recipe_count = steps.getOrDefault(recipe, 0.0) + recipe_completions;
+        steps.put(recipe, recipe_count);
+        for (Material material : recipe.inputs) {
+            double this_amount = recipe_completions * material.quantity;
+            if (resources.containsKey(material.name)) {
+                double current = resources.get(material.name);
+                resources.put(material.name, current + this_amount);
+                all_resources.put(material.name, all_resources.get(material.name) + this_amount);
+                if (current <= 0 && current + this_amount > 0) {
+                    required_resources.add(material.name);
+                }
+            } else {
+                resources.put(material.name, this_amount);
+                all_resources.put(material.name, this_amount);
+                required_resources.add(material.name);
+            }
+        }
+        for (Material material : recipe.outputs) {
+            double this_amount = -material.quantity * amount / recipe.amountOutput(output);
+            if (resources.containsKey(material.name)) {
+                double current = resources.get(material.name);
+                resources.put(material.name, current + this_amount);
+                if (current + this_amount <= 0) {
+                    required_resources.remove(material.name);
+                }
+            } else {
+                resources.put(material.name, this_amount);
+            }
+        }
+    }
+
+    private void reset() {
+        steps.clear();
+        resources.clear();
+        all_resources.clear();
+        recipe_order = new ArrayList<>();
+    }
+
+    private double getProductivity(Recipe recipe, Station station, int prod_mod_level) {
+        if (recipe.can_prod) {
+            return station.getProd(prod_mod_level);
+        }
+        return station.getProd(0);
+
+    }
+
+    private <T> int giveOptions(String heading, Iterable<T> list) {
         System.out.println(heading);
         int counter = 0;
         for (T element : list) {
@@ -55,14 +252,14 @@ public class RecipeBrowser {
         return counter;
     }
 
-    public boolean giveYesNo() {
+    private boolean giveYesNo() {
         System.out.println("0: No.");
         System.out.println("1: Yes.");
         return getUserInt(0, 1) == 1;
 
     }
 
-    public int getUserInt(int min, int max) {
+    private int getUserInt(int min, int max) {
         int userIn = stdin.nextInt();
         stdin.nextLine();
         while (userIn < min && userIn >= max) {
@@ -73,58 +270,20 @@ public class RecipeBrowser {
         return userIn;
     }
 
-    public int hasStation(String station) {
+    private int hasStation(String station) {
         System.out.println("Does this factory use " + station + "?");
         System.out.println("0: No.");
         System.out.println("1: Yes.");
         return getUserInt(0, 1);
     }
 
-    public int moduleLevel(String moduleType) {
+    private int moduleLevel(String moduleType) {
         System.out.println("What level of " + moduleType + " module does this factory have?");
         System.out.println("0: None.");
         System.out.println("1: Level 1.");
         System.out.println("2: Level 2.");
         System.out.println("3: Level 3.");
         return getUserInt(0, 3);
-    }
-
-    public double quantityIn(String input, String output, int prod_mod_level, boolean verbose) {
-        if (allMaterials.get(output) == null) {
-            throw new InvalidMaterialException(output);
-        }
-        double result = quantIn(input, output, prod_mod_level, verbose);
-        quantInCache.clear();
-        return result;
-    }
-
-    private double quantIn(String input, String output, int prod_mod_level, boolean verbose) {
-        Double cached = quantInCache.get(output);
-        if (cached != null)
-        {
-            return cached;
-        }
-        if (input.equals(output)) {
-            return 1;
-        }
-        ArrayList<Recipe> recipes = findRecipes(output);
-        if (recipes.isEmpty()) {
-            return 0;
-        }
-
-        Recipe recipe = pickRecipe(output, recipes);
-        Station station = pickStation(recipe);
-        double productivity = station.getProd(prod_mod_level);
-        if (verbose) {
-            System.out.println(recipe.toStringSpecificVerbose(station, prod_mod_level));
-        }
-        double sum = 0;
-        for (Material material : recipe.inputs) {
-            sum += quantIn(input, material.name, prod_mod_level, verbose) * material.quantity
-                    / (recipe.amountOutput(output) * productivity);
-        }
-        quantInCache.put(output, sum);
-        return sum;
     }
 
     public ArrayList<String> baseIngredients(String output) {
@@ -212,6 +371,9 @@ public class RecipeBrowser {
         if (recipes.size() == 1) {
             return recipes.get(0);
         }
+        if (recipes.size() == 0) {
+            return null;
+        }
         Setting setting = settings.get(output);
         Recipe recipe = null;
         if (setting == null) {
@@ -230,8 +392,7 @@ public class RecipeBrowser {
         return recipe;
     }
 
-    public Recipe pickRecipe(String output)
-    {
+    public Recipe pickRecipe(String output) {
         return pickRecipe(output, findRecipes(output));
     }
 
@@ -277,7 +438,7 @@ public class RecipeBrowser {
         query.query(this);
     }
 
-    public void addNewSetting(Setting setting) {
+    private void addNewSetting(Setting setting) {
         settings.put(setting.topic, setting);
         try (FileWriter writer = new FileWriter(factory, true)) {
             writer.write("\n");
@@ -338,5 +499,11 @@ class StationNotFoundException extends QueryException {
 class InvalidMaterialException extends QueryException {
     public InvalidMaterialException(String output) {
         super("Error: '" + output + "' not found in any recipes.");
+    }
+}
+
+class CycleException extends QueryException {
+    public CycleException(String material) {
+        super("Error: '" + material + "' recipe contains a cycle.");
     }
 }

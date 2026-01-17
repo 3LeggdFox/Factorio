@@ -8,7 +8,6 @@ public class FactorioQueries {
     public static void main(String[] args) {
         Scanner scanInp = new Scanner(System.in);
         RecipeBrowser recipes = initialiseBrowser("examplefactory.txt", scanInp);
-
         while (true) {
             System.out.print("Command: ");
             try {
@@ -23,7 +22,7 @@ public class FactorioQueries {
 
     static RecipeBrowser initialiseBrowser(String factory, Scanner scanInp) {
         try {
-            File file = new File("recipes.txt");
+            File file = new File("recipes2.txt");
             Scanner scanner = new Scanner(file);
             ArrayList<Recipe> recipes = new ArrayList<Recipe>();
             HashMap<String, Integer> allMaterials = new HashMap<String, Integer>();

@@ -62,11 +62,12 @@ public class HelpQuery extends Query {
 
     private void printGet()
     {
-        System.out.println("[verbose] get <material1> in <material2> [prod <productivity_module_level>]");
-        System.out.println("    Returns the amount of material1 in material2.");
+        System.out.println("[verbose] get <material1> in [amount] <material2> [prod <productivity_module_level>]");
+        System.out.println("    Returns the amount of material1 in [amount *] material2.");
         System.out.println("    Prints the construction path if verbose.");
         System.out.println("    Uses productivity modules if prod <integer> is included.");
-        System.out.println("    Using input 'all' returns all base ingredients.");
+        System.out.println("    Using input 'base' returns all base ingredients.");
+        System.out.println("    Using input 'all' returns all ingredients.");
         System.out.println();
     }
 
