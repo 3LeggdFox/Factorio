@@ -35,6 +35,8 @@ public class HelpQuery extends Query {
             case "math":
                 printMath();
                 break;
+            case "factory":
+                printFactory();
             case "verbose":
                 printVerbose();
                 break;
@@ -121,6 +123,32 @@ public class HelpQuery extends Query {
     private void printMath() {
         System.out.println("<number1> <operation> <number2>");
         System.out.println("    Prints the result of basic mathematical operations.");
+        System.out.println();
+    }
+
+    private void printFactory() {
+        System.out.println("factory [<command> <target*>]");
+        System.out.println("    Prints the name of the factory.");
+        System.out.println("    Using a command can perform various functions as listed below.");
+        System.out.println();
+        System.out.println("        new <new_factory_name>");
+        System.out.println("            Makes a new factory with the given name.");
+        System.out.println();
+        System.out.println("        change <new_factory_name>");
+        System.out.println("            Moves to the given factory.");
+        System.out.println();
+        System.out.println("        rename <new_factory_name>");
+        System.out.println("            Renames the current factory to the given name.");
+        System.out.println();
+        System.out.println("        copy <new_factory_name>");
+        System.out.println("            Copies the current factory to a new one with the given name.");
+        System.out.println();
+        System.out.println("        list ['templates']");
+        System.out.println("            Prints the names of all factories.");
+        System.out.println("            Prints the names of all templates if 'templates' is appended to command.");
+        System.out.println();
+        System.out.println("        template <new_template_name>");
+        System.out.println("            Creates a new template from the current factory settings.");
         System.out.println();
     }
 

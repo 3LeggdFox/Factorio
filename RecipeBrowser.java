@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
@@ -30,6 +32,81 @@ public class RecipeBrowser {
         this.all_materials = allMaterials;
         this.base_ingredients = base_ingredients;
         this.stdin = scanner;
+    }
+
+    public static RecipeBrowser initialiseBrowser(String factory, Scanner scanInp) {
+        try {
+            File file = new File("recipes.txt");
+            Scanner scanner = new Scanner(file);
+            ArrayList<Recipe> recipes = new ArrayList<Recipe>();
+            HashSet<String> allMaterials = new HashSet<>();
+            while (scanner.hasNextLine()) {
+                Recipe recipe = Parser.parseRecipe(scanner.nextLine());
+                for (Material input : recipe.inputs) {
+                    allMaterials.add(input.name);
+                }
+                for (Material output : recipe.outputs) {
+                    allMaterials.add(output.name);
+                }
+                recipes.add(recipe);
+            }
+            scanner.close();
+
+            file = new File("stations.txt");
+            scanner = new Scanner(file);
+            HashMap<String, Station> stations = new HashMap<String, Station>();
+            while (scanner.hasNextLine()) {
+                Station station = Parser.parseStations(scanner.nextLine());
+                stations.put(station.name, station);
+            }
+            scanner.close();
+
+            file = new File("factories/" + factory);
+            scanner = new Scanner(file);
+            HashMap<String, Setting> settings = new HashMap<String, Setting>();
+            while (scanner.hasNextLine()) {
+                Setting setting = Parser.parseSettings(scanner.nextLine());
+                settings.put(setting.topic, setting);
+            }
+            scanner.close();
+
+            file = new File("base.txt");
+            scanner = new Scanner(file);
+            HashSet<String> base_ingredients = new HashSet<>();
+            while (scanner.hasNextLine()) {
+                base_ingredients.add(scanner.nextLine());
+            }
+            scanner.close();
+            RecipeBrowser browser = new RecipeBrowser(recipes, settings, stations, factory, allMaterials, base_ingredients, scanInp);
+            browser.initCheckCycle();
+            return browser;
+        } catch (FileNotFoundException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+            return null;
+        } catch (QueryException e) {
+            e.printStackTrace();
+            System.err.println(e.getMessage());
+            System.exit(1);
+            return null;
+        }
+    }
+
+    public void newFactory(String new_factory) {
+        File file = new File("factories/" + new_factory);
+        try (Scanner scanner = new Scanner(file)) {
+            HashMap<String, Setting> new_settings = new HashMap<String, Setting>();
+            while (scanner.hasNextLine()) {
+                Setting setting = Parser.parseSettings(scanner.nextLine());
+                new_settings.put(setting.topic, setting);
+            }
+            scanner.close();
+            this.settings = new_settings;
+            this.factory = new_factory;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     private ArrayList<Recipe> findRecipes(String material) {
@@ -168,7 +245,7 @@ public class RecipeBrowser {
                 double this_amount = amount * material.quantity / recipe.amountOutput(output);
                 double current_amount = resources.get(material.name);
                 resources.put(material.name, current_amount - this_amount);
-                all_resources.put(material.name, all_resources.get(material.name) - this_amount);
+                all_resources.put(material.name, all_resources.getOrDefault(material.name, 0.0) - this_amount);
             }
             for (Material material : recipe.inputs) {
                 double this_amount = amount * material.quantity / (recipe.amountOutput(output) / productivity);
@@ -272,7 +349,7 @@ public class RecipeBrowser {
         return giveOptions("Decision concerning '" + material + "' must be made between:", list, is_base_resource);
     }
 
-    private <T> int giveOptions(String heading, Iterable<T> list, boolean is_base_resource) {
+    public <T> int giveOptions(String heading, Iterable<T> list, boolean is_base_resource) {
         System.out.println(heading);
         int counter = 0;
         for (T element : list) {
@@ -288,18 +365,20 @@ public class RecipeBrowser {
         return counter;
     }
 
-    private boolean giveYesNo() {
+    public boolean giveYesNo() {
         System.out.println("0: No.");
         System.out.println("1: Yes.");
         return getUserInt(0, 1) == 1;
 
     }
 
-    private int getUserInt(int min, int max) {
+    public int getUserInt(int min, int max) {
+        System.out.print("Choice: ");
         int userIn = stdin.nextInt();
         stdin.nextLine();
         while (userIn < min && userIn >= max) {
             System.out.println("Please select a valid option (in the range [" + min + "," + (max - 1) + "]).");
+            System.out.print("Choice: ");
             userIn = stdin.nextInt();
             stdin.nextLine();
         }
@@ -320,42 +399,6 @@ public class RecipeBrowser {
         System.out.println("2: Level 2.");
         System.out.println("3: Level 3.");
         return getUserInt(0, 3);
-    }
-
-    public ArrayList<String> baseIngredients(String output) {
-        HashSet<String> base_ingredients = new HashSet<>();
-        baseIngredients(output, base_ingredients);
-        return new ArrayList<>(base_ingredients);
-    }
-
-    private void baseIngredients(String output, HashSet<String> hash_set) {
-        ArrayList<Recipe> recipes = findRecipes(output);
-        if (recipes.isEmpty()) {
-            hash_set.add(output);
-            return;
-        }
-        Recipe recipe = pickRecipe(output, recipes);
-        for (Material material : recipe.inputs) {
-            baseIngredients(material.name, hash_set);
-        }
-    }
-
-    public ArrayList<String> nonBaseIngredients(String output) {
-        HashSet<String> non_base_ingredients = new HashSet<>();
-        nonBaseIngredients(output, non_base_ingredients);
-        return new ArrayList<>(non_base_ingredients);
-    }
-
-    private void nonBaseIngredients(String output, HashSet<String> hash_set) {
-        ArrayList<Recipe> recipes = findRecipes(output);
-        if (recipes.isEmpty()) {
-            return;
-        }
-        hash_set.add(output);
-        Recipe recipe = pickRecipe(output, recipes);
-        for (Material material : recipe.inputs) {
-            nonBaseIngredients(material.name, hash_set);
-        }
     }
 
     public void listQuery(String item, boolean verbose) {

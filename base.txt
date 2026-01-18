@@ -6,7 +6,6 @@ stone
 iron_ore
 copper_ore
 uranium_ore
-ice
 calcite
 tungsten_ore
 scrap

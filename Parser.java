@@ -145,6 +145,7 @@ public class Parser {
             }
         }
         String topic;
+        String command;
         String material;
         int prod_mod_level;
         String output;
@@ -220,8 +221,20 @@ public class Parser {
                 double number2 = parser.getNumber();
                 parser.checkExcess();
                 return new MathQuery(number, operation, number2);
+            case "factory":
+                command = parser.tryGetWord();
+                String target = null;
+                if (command != null) {
+                    if (command.equals("list")) {
+                        target = parser.tryGetWord();
+                    } else {
+                        target = parser.getWord();
+                    }
+                }
+                parser.checkExcess();
+                return new FactoryQuery(command, target);
             case "help":
-                String command = parser.tryGetWord();
+                command = parser.tryGetWord();
                 parser.checkExcess();
                 return new HelpQuery(command, verbose);
             case "exit":
