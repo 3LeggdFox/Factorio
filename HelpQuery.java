@@ -7,43 +7,44 @@ public class HelpQuery extends Query {
     }
 
     public void query(RecipeBrowser browser) {
-        if (command == null)
-        {
+        if (command == null) {
             command = "default";
         }
-        switch (command)
-        {
+        switch (command) {
             case "get":
                 printGet();
-            break;
+                break;
             case "machines":
                 printMachines();
-            break;
+                break;
             case "list":
                 printList();
-            break;
+                break;
             case "setting":
                 printSetting();
-            break;
+                break;
             case "time":
                 printTime();
-            break;
+                break;
             case "update":
                 printUpdate();
-            break;
+                break;
+            case "search":
+                printSearch();
+                break;
             case "math":
                 printMath();
-            break;
+                break;
             case "verbose":
                 printVerbose();
-            break;
+                break;
             case "help":
                 printHelp();
-            break;
+                break;
             case "exit":
                 printExit();
                 System.out.println();
-            break;
+                break;
             default:
                 System.out.println("Some Commands:");
                 System.out.println();
@@ -53,6 +54,7 @@ public class HelpQuery extends Query {
                 printSetting();
                 printTime();
                 printUpdate();
+                printSearch();
                 printMath();
                 printVerbose();
                 printHelp();
@@ -60,8 +62,7 @@ public class HelpQuery extends Query {
         }
     }
 
-    private void printGet()
-    {
+    private void printGet() {
         System.out.println("[verbose] get <material1> in [amount] <material2> [prod <productivity_module_level>]");
         System.out.println("    Returns the amount of material1 in [amount *] material2.");
         System.out.println("    Prints the construction path if verbose.");
@@ -71,17 +72,16 @@ public class HelpQuery extends Query {
         System.out.println();
     }
 
-    private void printMachines()
-    {
+    private void printMachines() {
         System.out.println("[verbose] machines in [quantity] <material> [prod <productivity_module_level>]");
-        System.out.println("    Returns the minimum number of machines needed to achieve\n    quantity (defaults to 1) material per second.");
+        System.out.println(
+                "    Returns the minimum number of machines needed to achieve\n    quantity (defaults to 1) material per second.");
         System.out.println("    Prints the recipes used and shows decimal places for machine number if verbose.");
         System.out.println("    Uses productivity modules if prod <integer> is included.");
         System.out.println();
     }
 
-    private void printList()
-    {
+    private void printList() {
         System.out.println("list <material>");
         System.out.println("    Lists all recipes involving material.");
         System.out.println("    Using material 'recipes' returns all recipes.");
@@ -89,15 +89,13 @@ public class HelpQuery extends Query {
         System.out.println();
     }
 
-    private void printSetting()
-    {
+    private void printSetting() {
         System.out.println("setting <setting_topic>");
         System.out.println("    Prints the setting.");
         System.out.println();
     }
 
-    private void printTime()
-    {
+    private void printTime() {
         System.out.println("[verbose] time <material> [prod <productivity_module_level>]");
         System.out.println("    Returns the amount of time it takes for the chosen recipe to complete.");
         System.out.println("    Prints the recipe details if verbose.");
@@ -105,38 +103,41 @@ public class HelpQuery extends Query {
         System.out.println();
     }
 
-    private void printUpdate()
-    {
+    private void printUpdate() {
         System.out.println("update <setting_topic> = <setting_value>");
         System.out.println("    Updates the setting file.");
         System.out.println("    Adds a new setting if the topic has none yet.");
         System.out.println();
     }
 
-    private void printMath()
-    {
+    private void printSearch() {
+        System.out.println("search <word1> [<logical_operator> <word2>]");
+        System.out.println("    Prints a list of materials containing word1.");
+        System.out.println("    logical_operator can either be 'and' or 'or'.");
+        System.out.println("    If the second argument is supplied, prints materials based on both words and logical_operator.");
+        System.out.println();
+    }
+
+    private void printMath() {
         System.out.println("<number1> <operation> <number2>");
         System.out.println("    Prints the result of basic mathematical operations.");
         System.out.println();
     }
 
-    private void printVerbose()
-    {
+    private void printVerbose() {
         System.out.println("verbose");
         System.out.println("    Toggles verbose on/off.");
         System.out.println();
     }
 
-    private void printHelp()
-    {
+    private void printHelp() {
         System.out.println("help [command]");
         System.out.println("    Lists all commands and usage with syntax.");
         System.out.println("    Lists specific command's usage and syntax if a command is included.");
         System.out.println();
     }
 
-    private void printExit()
-    {
+    private void printExit() {
         System.out.println("exit");
         System.out.println("    Ends the process.");
     }

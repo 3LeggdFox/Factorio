@@ -206,6 +206,15 @@ public class Parser {
                 }
                 parser.checkExcess();
                 return new UpdateSettingQuery(topic, setting, verbose);
+            case "search":
+                material = parser.getWord();
+                String operator = parser.tryGetWord();
+                if (operator != null && !operator.equals("or") && !operator.equals("and")) {
+                    throw new ParsingException("Error: Expected 'and' or 'or', found '" + operator + "'.", line, parser.position);
+                }
+                String material2 = parser.tryGetWord();
+                parser.checkExcess();
+                return new SearchQuery(material, operator, material2);
             case "math":
                 char operation = parser.increment();
                 double number2 = parser.getNumber();
@@ -356,7 +365,7 @@ public class Parser {
     private void eat(char expected) {
         trim();
         if (position >= line.length()) {
-            throw new ParsingException("Error: Expected '" + expected + "' found end of string.", line, position);
+            throw new ParsingException("Error: Expected '" + expected + "', found end of string.", line, position);
         }
         if (expected != line.charAt(position++)) {
             throw new ParsingException("Error: Expected '" + expected + "', found '" + line.charAt(position - 1) + "'.",
