@@ -27,22 +27,8 @@ public class SearchQuery extends Query {
             searching_string += search_string2;
         }
         System.out.println("Materials matching '" + searching_string + "':");
-        int count = 0;
-        for (String material : browser.all_materials) {
-            if (material.indexOf(search_string1) != -1) {
-                if (has_second_argument && logic_is_and && material.indexOf(search_string2) == -1) {
-                    continue;
-                }
-                System.out.println(material);
-                count++;
-            }
-            if (has_second_argument && !logic_is_and && material.indexOf(search_string2) != -1) {
-                System.out.println(material);
-                count++;
-            }
-        }
-        if (count == 0) {
-            System.out.println("None.");
-        }
+        browser.searchQuery(search_string1, logic_is_and, search_string2, has_second_argument, browser.all_materials, false);
+        System.out.println("\nSettings matching '" + searching_string + "':");
+        browser.searchQuery(search_string1, logic_is_and, search_string2, has_second_argument, browser.settings.keySet(), true);
     }
 }

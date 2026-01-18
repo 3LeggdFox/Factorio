@@ -65,6 +65,32 @@ public class RecipeBrowser {
         reset();
     }
 
+    public <T> void searchQuery(String search_string1, boolean logic_is_and, String search_string2, boolean has_second_argument, Iterable<String> searching_list, boolean is_setting) {
+        int count = 0;
+        for (String material : searching_list) {
+            if (material.indexOf(search_string1) != -1) {
+                if (has_second_argument && logic_is_and && material.indexOf(search_string2) == -1) {
+                    continue;
+                }
+                if (is_setting) {
+                    material = settings.get(material).toString();
+                }
+                System.out.println(material);
+                count++;
+            }
+            if (has_second_argument && !logic_is_and && material.indexOf(search_string2) != -1) {
+                if (is_setting) {
+                    material = settings.get(material).toString();
+                }
+                System.out.println(material);
+                count++;
+            }
+        }
+        if (count == 0) {
+            System.out.println("None.");
+        }
+    }
+
     public void getBasicIngredients(String output, double amount, int prod_mod_level, boolean verbose) {
         getRecipesIn(output, amount, prod_mod_level);
         if (verbose) {
