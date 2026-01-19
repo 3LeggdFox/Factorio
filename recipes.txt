@@ -243,6 +243,7 @@
 1 submachine_gun = 10 iron, 5 copper, 10 cog. Takes 10 seconds
 1 railgun = 10 tungsten_plate, 10 superconductor, 20 quantum_processor, 10 fluoroketone_cold. Takes 10 seconds, needs CryogenicPlant
 1 tesla_gun = 30 plastic, 10 holmium, 10 superconductor, 100 electrolyte. Takes 30 seconds, needs EMPlant
+10 lubricant = 10 heavy_oil. Takes 10 seconds, needs ChemicalPlant. Uses productivity modules
 50 sulfuric_acid = 1 iron, 5 sulfur, 100 water. Takes 1 seconds, needs ChemicalPlant, CryogenicPlant. Uses productivity modules
 75 thruster_fuel = 2 carbon, 10 water. Takes 2 seconds, needs ChemicalPlant. Uses productivity modules
 75 thruster_oxidizer = 2 iron_ore, 10 water. Takes 2 seconds, needs ChemicalPlant. Uses productivity modules

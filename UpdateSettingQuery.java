@@ -6,6 +6,6 @@ public class UpdateSettingQuery extends Query {
     }
 
     public void query(RecipeBrowser browser) {
-        browser.changeSetting(topic);
+        browser.updateSetting(topic);
     }
 }

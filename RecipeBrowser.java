@@ -643,11 +643,8 @@ public class RecipeBrowser {
         }
     }
 
-    public void changeSetting(String setting_name) {
+    public void updateSetting(String setting_name) {
         boolean setting_is_new = !settings.containsKey(setting_name);
-        if (!setting_name.startsWith("has") && stations.containsKey(setting_name)) {
-            setting_name = "has" + setting_name;
-        }
         String old_value = "ERROR";
         if (!setting_is_new) {
             old_value = settings.get(setting_name).value;
@@ -657,22 +654,17 @@ public class RecipeBrowser {
             ArrayList<Recipe> possible_recipes = findRecipes(setting_name);
             new_setting = new Setting(setting_name, userChooseRecipe(possible_recipes, setting_name));
             if (!setting_is_new) {
-                settings.put(setting_name, new_setting);
+                changeSetting(new_setting);
             } else {
                 addNewSetting(new_setting);
             }
-        } else if (setting_name.startsWith("has")) {
-            Station station = stations.get(setting_name.substring(3));
-            if (station != null) {
-                new_setting = new Setting(setting_name, hasStation(station.name));
-                if (!setting_is_new) {
-                    settings.put(setting_name, new_setting);
-                } else {
-                    addNewSetting(new_setting);
-                }
+        } else if (stations.containsKey(setting_name)) {
+            Station station = stations.get(setting_name);
+            new_setting = new Setting(setting_name, hasStation(station.name));
+            if (!setting_is_new) {
+                changeSetting(new_setting);
             } else {
-                System.err.println("Error: Station '" + setting_name.substring(3) + "' not found.");
-                return;
+                addNewSetting(new_setting);
             }
         } else {
             System.err.println("Error: No possible setting fits the name '" + setting_name + "'.");
@@ -680,17 +672,19 @@ public class RecipeBrowser {
         }
         if (setting_is_new) {
             System.out.println("Setting '" + settings.get(setting_name) + "' was added.");
-            return;
         } else {
             System.out.println(
                 "Setting '" + setting_name + "' was updated from '" + old_value + "' to '" + new_setting.value + "'.");
         }
+        changeSetting(new Setting(setting_name, old_value));
+    }
 
+    public void changeSetting(Setting setting) {
+        settings.put(setting.topic, setting);
         if (checkCycle()) {
-            settings.put(setting_name, new Setting(setting_name, old_value));
-            throw new CycleException(setting_name);
+            settings.put(setting.topic, setting);
+            throw new CycleException(setting.topic);
         }
-
         try (FileWriter writer = new FileWriter("factories/" + factory)) {
             boolean first = true;
             for (Setting set : settings.values()) {
