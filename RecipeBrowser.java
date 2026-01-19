@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Scanner;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.InputMismatchException;
 
 public class RecipeBrowser {
     ArrayList<Recipe> recipes;
@@ -345,11 +346,11 @@ public class RecipeBrowser {
 
     }
 
-    private <T> int giveOptions(Iterable<T> list, boolean is_base_resource, String material) {
-        return giveOptions("Decision concerning '" + material + "' must be made between:", list, is_base_resource);
+    private <T> int giveOptions(Iterable<T> list, String material) {
+        return giveOptions("Decision concerning '" + material + "' must be made between:", list, material);
     }
 
-    public <T> int giveOptions(String heading, Iterable<T> list, boolean is_base_resource) {
+    public <T> int giveOptions(String heading, Iterable<T> list, String material) {
         System.out.println(heading);
         int counter = 0;
         for (T element : list) {
@@ -357,7 +358,7 @@ public class RecipeBrowser {
             System.out.println(element);
             counter++;
         }
-        if (is_base_resource) {
+        if (base_ingredients.contains(material)) {
             System.out.print(counter + ": ");
             System.out.println("Basic Resource");
             counter++;
@@ -365,31 +366,41 @@ public class RecipeBrowser {
         return counter;
     }
 
-    public boolean giveYesNo() {
+    boolean giveYesNo() {
         System.out.println("0: No.");
         System.out.println("1: Yes.");
-        return getUserInt(0, 1) == 1;
+        return getUserInt(0, 2) == 1;
 
     }
 
     public int getUserInt(int min, int max) {
-        System.out.print("Choice: ");
-        int userIn = stdin.nextInt();
-        stdin.nextLine();
-        while (userIn < min && userIn >= max) {
-            System.out.println("Please select a valid option (in the range [" + min + "," + (max - 1) + "]).");
+        boolean first = true;
+        int userIn = -1;
+        do {
+            if (!first) {
+                System.out.println("Please select a valid option (in the range [" + min + "," + (max - 1) + "]).");
+            } else {
+                first = false;
+            }
             System.out.print("Choice: ");
-            userIn = stdin.nextInt();
+            try {
+                userIn = stdin.nextInt();
+            } catch (InputMismatchException e) {
+                System.out.println("That is not an integer.");
+            }
             stdin.nextLine();
-        }
+        } while (userIn < min || userIn >= max);
         return userIn;
     }
 
-    private int hasStation(String station) {
+    private String hasStation(String station) {
         System.out.println("Does this factory use " + station + "?");
         System.out.println("0: No.");
         System.out.println("1: Yes.");
-        return getUserInt(0, 1);
+        if (getUserInt(0, 2) == 1) {
+            return "yes";
+        } 
+        return "no";
     }
 
     private int moduleLevel(String moduleType) {
@@ -458,6 +469,19 @@ public class RecipeBrowser {
         }
     }
 
+    private String userChooseRecipe(ArrayList<Recipe> list, String material) {
+        int counter = giveOptions(list, material);
+        int userIn = getUserInt(0, counter);
+        if (userIn == list.size()) {
+            return "basic";
+        }
+        return list.get(userIn).alt_name;
+    }
+
+    public Recipe pickRecipe(String output) {
+        return pickRecipe(output, findRecipes(output));
+    }
+
     private Recipe pickRecipe(String output, ArrayList<Recipe> recipe_options) {
         if (recipe_options.size() == 0) {
             return null;
@@ -468,15 +492,11 @@ public class RecipeBrowser {
         Setting setting = settings.get(output);
         Recipe recipe = null;
         if (setting == null) {
-            int counter = giveOptions(recipe_options, base_ingredients.contains(output), output);
-            int userIn = getUserInt(0, counter);
-            if (userIn == recipe_options.size()) {
-                addNewSetting(new Setting(output, "basic"));
+            String alt_name = userChooseRecipe(recipe_options, output);
+            addNewSetting(new Setting(output, alt_name));
+            if (alt_name.equals("basic")) {
                 return null;
-            } else {
-                recipe = recipe_options.get(userIn);
             }
-            addNewSetting(new Setting(output, recipe.alt_name));
         } else {
             if (setting.value.equals("basic")) {
                 return null;
@@ -493,14 +513,7 @@ public class RecipeBrowser {
 
     private String chooseRecipe(String material) {
         ArrayList<Recipe> recipe_options = findRecipes(material);
-        int counter = giveOptions(recipe_options, base_ingredients.contains(material), material);
-        int userIn = getUserInt(0, counter);
-        String recipe_name;
-        if (userIn == recipe_options.size()) {
-            recipe_name = "basic";
-        } else {
-            recipe_name = recipe_options.get(userIn).alt_name;
-        }
+        String recipe_name = userChooseRecipe(recipe_options, material);
         addNewSetting(new Setting(material, recipe_name), false);
         return recipe_name;
     }
@@ -512,10 +525,6 @@ public class RecipeBrowser {
         return chooseRecipe(setting_name);
     }
 
-    public Recipe pickRecipe(String output) {
-        return pickRecipe(output, findRecipes(output));
-    }
-
     public Station pickStation(Recipe recipe) {
         Station station = null;
         int highestPrio = -1;
@@ -524,10 +533,10 @@ public class RecipeBrowser {
             String setting_name = "has" + station_name;
             Setting setting = settings.get(setting_name);
             if (setting == null) {
-                setting = new Setting(setting_name, Integer.toString(hasStation(station_name)));
+                setting = new Setting(setting_name, hasStation(station_name));
                 addNewSetting(setting);
             }
-            if (setting.value.equals("1")) {
+            if (setting.value.equals("yes")) {
                 Station search_station = stations.get(station_name);
                 if (search_station == null) {
                     throw new StationNotFoundException("Error: Recipe uses station not found in station.txt.",
@@ -540,7 +549,7 @@ public class RecipeBrowser {
             }
         }
         if (station == null) {
-            throw new StationNotFoundException("Error: Factory does not have a required Station.", recipe.toString(), false);
+            throw new StationNotFoundException("Error: Factory does not have any required station.", recipe.toString(), false);
         }
         return station;
     }
@@ -564,6 +573,9 @@ public class RecipeBrowser {
         if (checkCycle()) {
             addNewSetting(new Setting("water", "basic"));
             addNewSetting(new Setting("coal", "basic"));
+            addNewSetting(new Setting("metallic_chunk", "basic"));
+            addNewSetting(new Setting("carbonic_chunk", "basic"));
+            addNewSetting(new Setting("oxide_chunk", "basic"));
         }
     }
 
@@ -573,6 +585,9 @@ public class RecipeBrowser {
         String acid = getRecipeOrChoose("sulfuric_acid");
         String coal = getRecipeOrChoose("coal");
         String carbon = getRecipeOrChoose("carbon");
+        String carbonic_chunk = getRecipeOrChoose("carbonic_chunk");
+        String metallic_chunk = getRecipeOrChoose("metallic_chunk");
+        String oxide_chunk = getRecipeOrChoose("oxide_chunk");
         boolean cycle = false;
         if (water.equals("default") && steam.equals("boiling")) {
             cycle = true;
@@ -582,6 +597,25 @@ public class RecipeBrowser {
         }
         if (coal.equals("default") && carbon.equals("default")) {
             cycle = true;
+        }
+        if (carbonic_chunk.equals("metallic")) {
+            if (metallic_chunk.equals("carbonic")) {
+                cycle = true;
+            } else if (metallic_chunk.equals("oxide") && oxide_chunk.equals("carbonic")) {
+                cycle = true;
+            }
+        }
+        if (carbonic_chunk.equals("oxide")) {
+            if (oxide_chunk.equals("carbonic")) {
+                cycle = true;
+            } else if (oxide_chunk.equals("metallic") && metallic_chunk.equals("carbonic")) {
+                cycle = true;
+            }
+        }
+        if (metallic_chunk.equals("oxide")) {
+            if (oxide_chunk.equals("metallic")) {
+                cycle = true;
+            }
         }
         return cycle;
     }
@@ -599,31 +633,65 @@ public class RecipeBrowser {
                 throw new CycleException(setting.topic);
             }
         }
-        try (FileWriter writer = new FileWriter(factory, true)) {
+        try (FileWriter writer = new FileWriter("factories/" + factory, true)) {
             writer.write("\n");
             writer.write(setting.toString());
+            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
         }
     }
 
-    public void changeSetting(Setting setting) {
-        if (!settings.containsKey(setting.topic)) {
-            System.out
-                    .println("The setting '" + setting.topic + "' was not found. Would you like to add this setting?");
-            if (giveYesNo()) {
-                addNewSetting(setting);
-                System.out.println("Setting '" + setting.toString() + "' was added.");
+    public void changeSetting(String setting_name) {
+        boolean setting_is_new = !settings.containsKey(setting_name);
+        if (!setting_name.startsWith("has") && stations.containsKey(setting_name)) {
+            setting_name = "has" + setting_name;
+        }
+        String old_value = "ERROR";
+        if (!setting_is_new) {
+            old_value = settings.get(setting_name).value;
+        }
+        Setting new_setting;
+        if (all_materials.contains(setting_name)) {
+            ArrayList<Recipe> possible_recipes = findRecipes(setting_name);
+            new_setting = new Setting(setting_name, userChooseRecipe(possible_recipes, setting_name));
+            if (!setting_is_new) {
+                settings.put(setting_name, new_setting);
+            } else {
+                addNewSetting(new_setting);
+            }
+        } else if (setting_name.startsWith("has")) {
+            Station station = stations.get(setting_name.substring(3));
+            if (station != null) {
+                new_setting = new Setting(setting_name, hasStation(station.name));
+                if (!setting_is_new) {
+                    settings.put(setting_name, new_setting);
+                } else {
+                    addNewSetting(new_setting);
+                }
+            } else {
+                System.err.println("Error: Station '" + setting_name.substring(3) + "' not found.");
+                return;
             }
         } else {
-            String old_value = settings.get(setting.topic).value;
-            settings.put(setting.topic, setting);
+            System.err.println("Error: No possible setting fits the name '" + setting_name + "'.");
+            return;
+        }
+        if (setting_is_new) {
+            System.out.println("Setting '" + settings.get(setting_name) + "' was added.");
+            return;
+        } else {
             System.out.println(
-                    "Setting '" + setting.topic + "' was updated from '" + old_value + "' to '" + setting.value + "'.");
+                "Setting '" + setting_name + "' was updated from '" + old_value + "' to '" + new_setting.value + "'.");
         }
 
-        try (FileWriter writer = new FileWriter(factory)) {
+        if (checkCycle()) {
+            settings.put(setting_name, new Setting(setting_name, old_value));
+            throw new CycleException(setting_name);
+        }
+
+        try (FileWriter writer = new FileWriter("factories/" + factory)) {
             boolean first = true;
             for (Setting set : settings.values()) {
                 if (!first) {
@@ -633,6 +701,7 @@ public class RecipeBrowser {
                 }
                 writer.write(set.toString());
             }
+            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
@@ -655,7 +724,7 @@ class StationNotFoundException extends QueryException {
         if (not_real_station) {
             builder.append("Searched for '" + searchStationName + "'.");
         } else {
-            builder.append(searchStationName);
+            builder.append("\n" + searchStationName);
         }
         return builder.toString();
     }

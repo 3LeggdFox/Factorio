@@ -1,12 +1,11 @@
 public class UpdateSettingQuery extends Query {
-    Setting new_setting;
+    String topic;
 
-    public UpdateSettingQuery(String topic, String setting, boolean verbose) {
-        this.new_setting = new Setting(topic, setting);
-        this.verbose = verbose;
+    public UpdateSettingQuery(String topic, boolean verbose) {
+        this.topic = topic;
     }
 
     public void query(RecipeBrowser browser) {
-        browser.changeSetting(new_setting);
+        browser.changeSetting(topic);
     }
 }

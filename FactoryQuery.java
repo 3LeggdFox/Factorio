@@ -56,7 +56,7 @@ public class FactoryQuery extends Query {
                 int end = file_name.lastIndexOf('.');
                 file_names.add(file_name.substring(0, end));
             }
-            int counter = browser.giveOptions("Choose template: ", file_names, false);
+            int counter = browser.giveOptions("Choose template: ", file_names, null);
             int choice = browser.getUserInt(0, counter);
             if (choice != 0) {
                 destination = target;
@@ -82,6 +82,10 @@ public class FactoryQuery extends Query {
                 File file = new File("factories/" + target + ".txt");
                 if (file.createNewFile()) {
                     System.out.println("New factory '" + target + "' was created.");
+                    try (FileWriter writer = new FileWriter("factories/" + target + ".txt")) {
+                        writer.write("hasAssembly1 = yes");
+                        writer.close();
+                    }
                 } else {
                     System.err.println("Error: Factory name '" + target + "' already exists.");
                 }

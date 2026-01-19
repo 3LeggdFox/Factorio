@@ -195,18 +195,8 @@ public class Parser {
                 return new TimeQuery(material, prod_mod_level, verbose);
             case "update":
                 topic = parser.getWord();
-                parser.eat('=');
-                String setting = parser.tryGetWord();
-                if (setting == null)
-                {
-                    setting = String.valueOf((int) parser.getNumber());
-                    if (setting == null)
-                    {
-                        parser.getWord();
-                    }
-                }
                 parser.checkExcess();
-                return new UpdateSettingQuery(topic, setting, verbose);
+                return new UpdateSettingQuery(topic, verbose);
             case "search":
                 material = parser.getWord();
                 String operator = parser.tryGetWord();

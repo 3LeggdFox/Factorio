@@ -37,6 +37,7 @@ public class HelpQuery extends Query {
                 break;
             case "factory":
                 printFactory();
+                break;
             case "verbose":
                 printVerbose();
                 break;
@@ -58,6 +59,7 @@ public class HelpQuery extends Query {
                 printUpdate();
                 printSearch();
                 printMath();
+                printFactory();
                 printVerbose();
                 printHelp();
                 printExit();
@@ -106,9 +108,9 @@ public class HelpQuery extends Query {
     }
 
     private void printUpdate() {
-        System.out.println("update <setting_topic> = <setting_value>");
-        System.out.println("    Updates the setting file.");
-        System.out.println("    Adds a new setting if the topic has none yet.");
+        System.out.println("update <setting_topic>");
+        System.out.println("    Prompts the user to choose the setting for the given topic.");
+        System.out.println("    Will replace any previous setting for the topic.");
         System.out.println();
     }
 

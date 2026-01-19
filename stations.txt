@@ -15,3 +15,5 @@ Recycler: 4 modules, 0% productivity, 0.5 crafting speed, 1 prio
 Time: 0 modules, 0% productivity, 1 crafting speed, 1 prio
 Bioler: 0 modules, 0% productivity, 1 crafting speed, 1 prio
 HeatExchanger: 0 modules, 0% productivity, 1.71667 crafting speed, 2 prio
+RocketSilo: 4 modules, 0% productivity, 1 crafting speed, 1 prio
+Crusher: 2 modules, 0% productivity, 1 crafting speed, 1 prio

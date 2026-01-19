@@ -104,13 +104,16 @@ public class Recipe {
         // All Usable Stations
         boolean first = true;
         for (String station : this.stations) {
-            if (!station.equals("Assembly1") && !station.equals("Assembly2") && !station.equals("Assembly3")) {
-                if (first) {
-                    string.append(station);
-                    first = false;
-                } else {
-                    string.append(", " + station);
+            if (!has_req) {
+                if (station.equals("Assembly1") || station.equals("Assembly2") || station.equals("Assembly3")) {
+                    continue;
                 }
+            }
+            if (first) {
+                string.append(station);
+                first = false;
+            } else {
+                string.append(", " + station);
             }
         }
 
