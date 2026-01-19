@@ -482,30 +482,27 @@ public class RecipeBrowser {
         return pickRecipe(output, findRecipes(output));
     }
 
-    private Recipe pickRecipe(String output, ArrayList<Recipe> recipe_options) {
+    private Recipe pickRecipe(String material, ArrayList<Recipe> recipe_options) {
         if (recipe_options.size() == 0) {
             return null;
         }
-        if (recipe_options.size() == 1 && !base_ingredients.contains(output)) {
+        if (recipe_options.size() == 1 && !base_ingredients.contains(material)) {
             return recipe_options.get(0);
         }
-        Setting setting = settings.get(output);
+        Setting setting = settings.get(material);
         Recipe recipe = null;
         if (setting == null) {
-            String alt_name = userChooseRecipe(recipe_options, output);
-            addNewSetting(new Setting(output, alt_name));
-            if (alt_name.equals("basic")) {
-                return null;
-            }
-        } else {
-            if (setting.value.equals("basic")) {
-                return null;
-            }
-            for (Recipe r : recipe_options) {
-                if (r.alt_name.equals(setting.value) || (r.alt_name == null && setting.value.equals("default"))) {
-                    recipe = r;
-                    break;
-                }
+            String alt_name = userChooseRecipe(recipe_options, material);
+            setting = new Setting(material, alt_name);
+            addNewSetting(setting);
+        }
+        if (setting.value.equals("basic")) {
+            return null;
+        }
+        for (Recipe r : recipe_options) {
+            if (r.alt_name.equals(setting.value) || (r.alt_name == null && setting.value.equals("default"))) {
+                recipe = r;
+                break;
             }
         }
         return recipe;
@@ -530,10 +527,9 @@ public class RecipeBrowser {
         int highestPrio = -1;
         ArrayList<String> allowedStations = (ArrayList<String>) recipe.stations.clone();
         for (String station_name : allowedStations) {
-            String setting_name = "has" + station_name;
-            Setting setting = settings.get(setting_name);
+            Setting setting = settings.get(station_name);
             if (setting == null) {
-                setting = new Setting(setting_name, hasStation(station_name));
+                setting = new Setting(station_name, hasStation(station_name));
                 addNewSetting(setting);
             }
             if (setting.value.equals("yes")) {

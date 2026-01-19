@@ -83,7 +83,7 @@ public class FactoryQuery extends Query {
                 if (file.createNewFile()) {
                     System.out.println("New factory '" + target + "' was created.");
                     try (FileWriter writer = new FileWriter("factories/" + target + ".txt")) {
-                        writer.write("hasAssembly1 = yes");
+                        writer.write("Assembly1 = yes");
                         writer.close();
                     }
                 } else {

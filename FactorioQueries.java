@@ -25,7 +25,5 @@ public class FactorioQueries {
             System.err.println("Fatal Error: Configuration file not found. Requires config.txt containing initial factory file.");
             System.exit(1);
         }
-        
-
     }
 }
