@@ -79,10 +79,10 @@ public class FactoryQuery extends Query {
         File dest;
         switch (keyword) {
             case "new":
-                File file = new File("factories/" + target + ".txt");
+                File file = new File(RecipeBrowser.FACTORY_FOLDER + target + ".txt");
                 if (file.createNewFile()) {
                     System.out.println("New factory '" + target + "' was created.");
-                    try (FileWriter writer = new FileWriter("factories/" + target + ".txt")) {
+                    try (FileWriter writer = new FileWriter(RecipeBrowser.FACTORY_FOLDER + target + ".txt")) {
                         writer.write("Assembly1 = yes");
                         writer.close();
                     }
@@ -102,8 +102,8 @@ public class FactoryQuery extends Query {
                 break;
             case "rename":
                 try (FileWriter writer = new FileWriter("config.txt")) {
-                    src = new File("factories/" + target + ".txt");
-                    dest = new File("factories/" + destination + ".txt");
+                    src = new File(RecipeBrowser.FACTORY_FOLDER + target + ".txt");
+                    dest = new File(RecipeBrowser.FACTORY_FOLDER + destination + ".txt");
                     if (src.renameTo(dest)) {
                         System.out.println("Factory renamed from '" + target + "' to '" + destination + "'.");
                     } else {
@@ -117,11 +117,11 @@ public class FactoryQuery extends Query {
                 break;
             case "copy":
                 if (using_template) {
-                    src = new File("factoryTemplates/" + target + ".txt");
+                    src = new File(RecipeBrowser.TEMPLATE_FOLDER + target + ".txt");
                 } else {
-                    src = new File("factories/" + target + ".txt");
+                    src = new File(RecipeBrowser.FACTORY_FOLDER + target + ".txt");
                 }
-                dest = new File("factories/" + destination + ".txt");
+                dest = new File(RecipeBrowser.FACTORY_FOLDER + destination + ".txt");
                 if (!src.exists()) {
                     System.err.println("Error: Factory '" + target + "' not found.");
                     return;
@@ -144,8 +144,8 @@ public class FactoryQuery extends Query {
                 }
                 break;
             case "template":
-                src = new File("factories/" + browser.factory);
-                dest = new File("factoryTemplates/" + target + ".txt");
+                src = new File(RecipeBrowser.FACTORY_FOLDER + browser.factory);
+                dest = new File(RecipeBrowser.TEMPLATE_FOLDER + target + ".txt");
                 Files.copy(src.toPath(), dest.toPath());
                 int end = browser.factory.lastIndexOf('.');
                 System.out.println("Factory '" + browser.factory.substring(0, end) + "' made into template '" + target + "'.");

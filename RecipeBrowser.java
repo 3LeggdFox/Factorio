@@ -24,8 +24,15 @@ public class RecipeBrowser {
     ArrayList<String> required_resources = new ArrayList<>();
     HashSet<String> cycle_check = new HashSet<>();
 
+    private static final String RECIPE_FILE = "recipes.txt";
+    private static final String STATION_FILE = "stations.txt";
+    private static final String BASE_RESOURCE_FILE = "base.txt";
+    static final String FACTORY_FOLDER = "factories/";
+    static final String TEMPLATE_FOLDER = "factoryTemplates/";
+
     public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings,
-            HashMap<String, Station> stations, String factory, HashSet<String> allMaterials, HashSet<String> base_ingredients, Scanner scanner) {
+            HashMap<String, Station> stations, String factory, HashSet<String> allMaterials,
+            HashSet<String> base_ingredients, Scanner scanner) {
         this.recipes = recipes;
         this.settings = settings;
         this.stations = stations;
@@ -37,7 +44,7 @@ public class RecipeBrowser {
 
     public static RecipeBrowser initialiseBrowser(String factory, Scanner scanInp) {
         try {
-            File file = new File("recipes.txt");
+            File file = new File(RECIPE_FILE);
             Scanner scanner = new Scanner(file);
             ArrayList<Recipe> recipes = new ArrayList<Recipe>();
             HashSet<String> allMaterials = new HashSet<>();
@@ -53,7 +60,7 @@ public class RecipeBrowser {
             }
             scanner.close();
 
-            file = new File("stations.txt");
+            file = new File(STATION_FILE);
             scanner = new Scanner(file);
             HashMap<String, Station> stations = new HashMap<String, Station>();
             while (scanner.hasNextLine()) {
@@ -62,7 +69,7 @@ public class RecipeBrowser {
             }
             scanner.close();
 
-            file = new File("factories/" + factory);
+            file = new File(FACTORY_FOLDER + factory);
             scanner = new Scanner(file);
             HashMap<String, Setting> settings = new HashMap<String, Setting>();
             while (scanner.hasNextLine()) {
@@ -71,14 +78,15 @@ public class RecipeBrowser {
             }
             scanner.close();
 
-            file = new File("base.txt");
+            file = new File(BASE_RESOURCE_FILE);
             scanner = new Scanner(file);
             HashSet<String> base_ingredients = new HashSet<>();
             while (scanner.hasNextLine()) {
                 base_ingredients.add(scanner.nextLine());
             }
             scanner.close();
-            RecipeBrowser browser = new RecipeBrowser(recipes, settings, stations, factory, allMaterials, base_ingredients, scanInp);
+            RecipeBrowser browser = new RecipeBrowser(recipes, settings, stations, factory, allMaterials,
+                    base_ingredients, scanInp);
             browser.initCheckCycle();
             return browser;
         } catch (FileNotFoundException e) {
@@ -94,7 +102,7 @@ public class RecipeBrowser {
     }
 
     public void newFactory(String new_factory) {
-        File file = new File("factories/" + new_factory);
+        File file = new File(FACTORY_FOLDER + new_factory);
         try (Scanner scanner = new Scanner(file)) {
             HashMap<String, Setting> new_settings = new HashMap<String, Setting>();
             while (scanner.hasNextLine()) {
@@ -123,7 +131,7 @@ public class RecipeBrowser {
     public void getMachinesIn(String output, double amount, int prod_mod_level, boolean verbose) {
         getRecipesIn(output, amount, prod_mod_level);
         boolean first = true;
-        for (Recipe recipe : steps.keySet()) {
+        for (Recipe recipe : recipe_order) {
             if (!first) {
                 System.out.println();
             } else {
@@ -137,13 +145,15 @@ public class RecipeBrowser {
                 System.out.println(String.format("%s\nNeed: %.3f %ss", station_string, machines, station.name));
             } else {
                 machines = Math.ceil(machines);
-                System.out.println(String.format("Using Recipe: %s\nNeed: %.0f %ss", recipe.toStringSpecific(station), machines, station.name));
+                System.out.println(String.format("Using Recipe: %s\nNeed: %.0f %ss", recipe.toStringSpecific(station),
+                        machines, station.name));
             }
         }
         reset();
     }
 
-    public <T> void searchQuery(String search_string1, boolean logic_is_and, String search_string2, boolean has_second_argument, Iterable<String> searching_list, boolean is_setting) {
+    public <T> void searchQuery(String search_string1, boolean logic_is_and, String search_string2,
+            boolean has_second_argument, Iterable<String> searching_list, boolean is_setting) {
         int count = 0;
         for (String material : searching_list) {
             if (material.indexOf(search_string1) != -1) {
@@ -176,7 +186,7 @@ public class RecipeBrowser {
         }
         for (String material : resources.keySet()) {
             double quantity = resources.get(material);
-            if (quantity != 0) {
+            if (quantity >= 0.001 || quantity <= -0.001) {
                 System.out.println(String.format("%s: %.3f", material, quantity));
             }
         }
@@ -207,32 +217,173 @@ public class RecipeBrowser {
         return result;
     }
 
-    private void clearUnecessary(String output, double amount, int prod_mod_level) {
-        Recipe recipe = pickRecipe(output);
+    private Recipe getLightCrackingRecipe() {
+        for (Recipe recipe : recipes) {
+            if (recipe.hasOutput("petrol") && recipe.alt_name.equals("cracking")) {
+                return recipe;
+            }
+        }
+        throw new InvalidMaterialException("Error: No light oil cracking recipe.");
+    }
+
+    private Recipe getHeavyCrackingRecipe() {
+        for (Recipe recipe : recipes) {
+            if (recipe.hasOutput("light_oil") && recipe.alt_name.equals("default")) {
+                return recipe;
+            }
+        }
+        throw new InvalidMaterialException("Error: No heavy oil cracking recipe.");
+    }
+
+    private void crackOils(int prod_mod_level) {
+        double extra_heavy = -resources.getOrDefault("heavy_oil", 0.0);
+        double extra_light = -resources.getOrDefault("light_oil", 0.0);
+        double extra_petrol = -resources.getOrDefault("petrol", 0.0);
+        boolean needed_heavy = all_resources.getOrDefault("heavy_oil", 0.0) > 0;
+        boolean needed_light = all_resources.getOrDefault("light_oil", 0.0) > 0;
+        boolean needed_petrol = all_resources.getOrDefault("petrol", 0.0) > 0;
+        Recipe heavy_recipe = getHeavyCrackingRecipe();
+        Recipe light_recipe = getLightCrackingRecipe();
+        String priority;
+        if (needed_petrol && extra_petrol == 0) {
+            priority = "petrol";
+        } else if (needed_light && extra_light == 0) {
+            priority = "light_oil";
+        } else if (needed_heavy && extra_heavy == 0) {
+            return;
+        } else {
+            System.out.println("Apparently you didn't account for everything oil-related.");
+            return;
+        }
+        Recipe recipe = null;
+        int prio = -1;
+        for (Recipe recipe_check : steps.keySet()) {
+            if (recipe_check.hasOutput(priority)) {
+                if (recipe_check.equals(heavy_recipe) || recipe_check.equals(light_recipe)) {
+                    if (prio < 0) {
+                        prio = 0;
+                        recipe = recipe_check;
+                    }
+                } else {
+                    int num_outputs = recipe_check.outputs.size();
+                    if (prio < num_outputs) {
+                        prio = num_outputs;
+                        recipe = recipe_check;
+                    }
+                }
+            }
+        }
         if (recipe == null) {
             return;
         }
+        crack(recipe, priority, extra_heavy, extra_light, extra_petrol, prod_mod_level);
+        clearUnecessary(priority, prio, recipe, prod_mod_level);
+    }
+
+    private void crack(Recipe recipe, String output, double extra_heavy, double extra_light, double extra_petrol,
+            int prod_mod_level) {
         Station station = pickStation(recipe);
         double productivity = getProductivity(recipe, station, prod_mod_level);
-        double undos = 0;
-        boolean can_undo = true;
+        double heavy_out = 0;
+        double light_out = 0;
+        double petrol_out = 0;
+        Recipe light_recipe = getLightCrackingRecipe();
+        Station light_station = pickStation(light_recipe);
+        double light_prod = getProductivity(light_recipe, light_station, prod_mod_level);
+        Recipe heavy_recipe = getHeavyCrackingRecipe();
+        Station heavy_station = pickStation(heavy_recipe);
+        double heavy_prod = getProductivity(heavy_recipe, heavy_station, prod_mod_level);
+        for (Material material : recipe.outputs) {
+            double this_amount = material.quantity * productivity;
+            if (material.name.equals("petrol")) {
+                petrol_out = this_amount;
+            } else if (material.name.equals("light_oil")) {
+                light_out = this_amount;
+            } else if (material.name.equals("heavy_oil")) {
+                heavy_out = this_amount;
+            }
+        }
+        double heavy_to_light_out;
+        if (light_out != 0) {
+            heavy_to_light_out = heavy_out / light_out;
+        } else {
+            heavy_to_light_out = 0;
+        }
+        double light_to_petrol_out = light_out / petrol_out;
+        double heavy_func = Math.max(
+                (extra_heavy * 30 - heavy_to_light_out * 30 * light_to_petrol_out * extra_petrol
+                        + light_to_petrol_out * 20 * light_prod * (extra_heavy - heavy_to_light_out * extra_light))
+                        / (40 * 30 + light_to_petrol_out * 20 * light_prod
+                                * (40 + heavy_to_light_out * 30 * heavy_prod)),
+                0);
+        double light_func = Math.max((40 * extra_light + extra_heavy * 30 * heavy_prod
+                - light_to_petrol_out * extra_petrol * (40 + heavy_to_light_out * 30 * heavy_prod))
+                / (40 * 30 + light_to_petrol_out * 20 * light_prod * (40 + heavy_to_light_out * 30 * heavy_prod)),
+                0);
+        double heavy_cracks = Math
+                .max((extra_heavy - heavy_to_light_out * extra_light + heavy_to_light_out * light_func * 30)
+                        / (40 + heavy_to_light_out * 30 * heavy_prod), 0);
+        double light_cracks = Math
+                .max((extra_light + heavy_func * 30 * heavy_prod - light_to_petrol_out * extra_petrol)
+                        / (30 + light_to_petrol_out * 20 * light_prod), 0);
+        if (!steps.containsKey(heavy_recipe) && heavy_cracks > 0) {
+            recipe_order.add(heavy_recipe);
+        }
+        steps.put(heavy_recipe, steps.getOrDefault(heavy_recipe, 0.0) + heavy_cracks);
+        for (Material material : heavy_recipe.outputs) {
+            double this_amount = heavy_cracks * material.quantity * light_prod;
+            double current_amount = resources.getOrDefault(material.name, 0.0);
+            resources.put(material.name, current_amount - this_amount);
+        }
+        for (Material material : heavy_recipe.inputs) {
+            double this_amount = heavy_cracks * material.quantity;
+            double current_amount = resources.get(material.name);
+            if (current_amount + this_amount > 0 && current_amount < 0) {
+                System.out.println("Function failed.");
+                return;
+            }
+            resources.put(material.name, current_amount + this_amount);
+            all_resources.put(material.name, all_resources.getOrDefault(material.name, 0.0) + this_amount);
+        }
+        if (!steps.containsKey(light_recipe) && light_cracks > 0) {
+            recipe_order.add(light_recipe);
+        }
+        steps.put(light_recipe, steps.getOrDefault(light_recipe, 0.0) + light_cracks);
+        for (Material material : light_recipe.outputs) {
+            double this_amount = light_cracks * material.quantity * light_prod;
+            double current_amount = resources.getOrDefault(material.name, 0.0);
+            resources.put(material.name, current_amount - this_amount);
+        }
+        for (Material material : light_recipe.inputs) {
+            double this_amount = light_cracks * material.quantity;
+            double current_amount = resources.get(material.name);
+            if (current_amount + this_amount > 0 && current_amount < 0) {
+                System.out.println("Function failed.");
+                return;
+            }
+            resources.put(material.name, current_amount + this_amount);
+            all_resources.put(material.name, all_resources.getOrDefault(material.name, 0.0) + this_amount);
+        }
+    }
+
+    private boolean clearUnecessary(String output, double amount, Recipe recipe, int prod_mod_level) {
+        boolean cleared_anything = false;
         Recipe store_recipe = recipe;
         if (recipe.has_cycle) {
             recipe = recipe.getNoCycleClone();
         }
-        while (true) {
-            for (Material material : recipe.outputs) {
-                double this_amount = amount * material.quantity / recipe.amountOutput(output);
-                double current_amount = resources.get(material.name);
-                if (current_amount - (this_amount * (undos + 1)) > 0)
-                {
-                    can_undo  = false;
-                }
-            }
-            if (can_undo) {
-                undos++;
+        Station station = pickStation(recipe);
+        double productivity = getProductivity(recipe, station, prod_mod_level);
+        boolean first = true;
+        double undos = 0;
+        for (Material material : recipe.outputs) {
+            double this_amount = -material.quantity * productivity;
+            double current_amount = resources.get(material.name);
+            if (first) {
+                undos = current_amount / this_amount;
+                first = false;
             } else {
-                break;
+                undos = Math.max(0, Math.min(undos, current_amount / this_amount));
             }
         }
         double recipe_count = steps.getOrDefault(store_recipe, 0.0);
@@ -240,24 +391,37 @@ public class RecipeBrowser {
             undos = recipe_count;
             recipe_order.remove(recipe);
         }
+        if (undos > 0) {
+            cleared_anything = true;
+        }
         steps.put(store_recipe, recipe_count - undos);
-        for (int i = 0; i < undos; ++i) {
-            for (Material material : recipe.outputs) {
-                double this_amount = amount * material.quantity / recipe.amountOutput(output);
-                double current_amount = resources.get(material.name);
-                resources.put(material.name, current_amount - this_amount);
-                all_resources.put(material.name, all_resources.getOrDefault(material.name, 0.0) - this_amount);
-            }
-            for (Material material : recipe.inputs) {
-                double this_amount = amount * material.quantity / (recipe.amountOutput(output) / productivity);
-                double current_amount = resources.get(material.name);
-                resources.put(material.name, current_amount + this_amount);
-                all_resources.put(material.name, all_resources.get(material.name) + this_amount);
-                if (current_amount + this_amount < 0) {
-                    clearUnecessary(material.name, current_amount + this_amount, prod_mod_level);
-                }
+        for (Material material : recipe.outputs) {
+            double this_amount = undos * material.quantity * productivity;
+            double current_amount = resources.get(material.name);
+            resources.put(material.name, current_amount + this_amount);
+        }
+        for (Material material : recipe.inputs) {
+            double this_amount = undos * material.quantity;
+            double current_amount = resources.get(material.name);
+            resources.put(material.name, current_amount - this_amount);
+            double all_current = all_resources.getOrDefault(material.name, 0.0);
+            all_resources.put(material.name, all_current - this_amount);
+            if (current_amount - this_amount < 0) {
+                clearUnecessary(material.name, current_amount + this_amount, prod_mod_level);
             }
         }
+        return cleared_anything;
+    }
+
+    private boolean clearUnecessary(String output, double amount, int prod_mod_level) {
+        boolean cleared_anything = false;
+        for (Recipe recipe : steps.keySet()) {
+            if (!recipe.hasOutput(output) || steps.get(recipe) <= 0) {
+                continue;
+            }
+            cleared_anything = clearUnecessary(output, amount, recipe, prod_mod_level) || cleared_anything;
+        }
+        return cleared_anything;
     }
 
     private void printRecipePath(int prod_mod_level) {
@@ -282,11 +446,12 @@ public class RecipeBrowser {
                 clearUnecessary(material, quantity, prod_mod_level);
             }
         }
+        crackOils(prod_mod_level);
     }
 
     private void addRecipes(String output, double amount, int prod_mod_level) {
         Recipe recipe = pickRecipe(output);
-        if (recipe == null) {
+        if (recipe == null || (resources.containsKey(output) && resources.get(output) <= 0)) {
             required_resources.remove(output);
             return;
         }
@@ -399,7 +564,7 @@ public class RecipeBrowser {
         System.out.println("1: Yes.");
         if (getUserInt(0, 2) == 1) {
             return "yes";
-        } 
+        }
         return "no";
     }
 
@@ -525,6 +690,7 @@ public class RecipeBrowser {
     public Station pickStation(Recipe recipe) {
         Station station = null;
         int highestPrio = -1;
+        @SuppressWarnings("unchecked")
         ArrayList<String> allowedStations = (ArrayList<String>) recipe.stations.clone();
         for (String station_name : allowedStations) {
             Setting setting = settings.get(station_name);
@@ -545,7 +711,8 @@ public class RecipeBrowser {
             }
         }
         if (station == null) {
-            throw new StationNotFoundException("Error: Factory does not have any required station.", recipe.toString(), false);
+            throw new StationNotFoundException("Error: Factory does not have any required station.", recipe.toString(),
+                    false);
         }
         return station;
     }
@@ -629,7 +796,7 @@ public class RecipeBrowser {
                 throw new CycleException(setting.topic);
             }
         }
-        try (FileWriter writer = new FileWriter("factories/" + factory, true)) {
+        try (FileWriter writer = new FileWriter(FACTORY_FOLDER + factory, true)) {
             writer.write("\n");
             writer.write(setting.toString());
             writer.close();
@@ -668,9 +835,11 @@ public class RecipeBrowser {
         }
         if (setting_is_new) {
             System.out.println("Setting '" + settings.get(setting_name) + "' was added.");
+            return;
         } else {
             System.out.println(
-                "Setting '" + setting_name + "' was updated from '" + old_value + "' to '" + new_setting.value + "'.");
+                    "Setting '" + setting_name + "' was updated from '" + old_value + "' to '" + new_setting.value
+                            + "'.");
         }
         changeSetting(new Setting(setting_name, old_value));
     }
@@ -681,7 +850,7 @@ public class RecipeBrowser {
             settings.put(setting.topic, setting);
             throw new CycleException(setting.topic);
         }
-        try (FileWriter writer = new FileWriter("factories/" + factory)) {
+        try (FileWriter writer = new FileWriter(FACTORY_FOLDER + factory)) {
             boolean first = true;
             for (Setting set : settings.values()) {
                 if (!first) {
