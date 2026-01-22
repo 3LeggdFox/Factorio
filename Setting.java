@@ -7,6 +7,10 @@ public class Setting {
         this.value = setting;
     }
 
+    public String getTopic() {
+        return topic;
+    }
+
     public String toString() {
         return topic + " = " + value;
     }

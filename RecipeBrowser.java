@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -585,7 +587,9 @@ public class RecipeBrowser {
             return;
         }
         if (item.equals("settings")) {
-            for (Setting setting : settings.values()) {
+            ArrayList<Setting> sorted = new ArrayList<>(settings.values());
+            Collections.sort(sorted, Comparator.comparing(Setting::getTopic));
+            for (Setting setting : sorted) {
                 System.out.println(setting);
             }
             return;
