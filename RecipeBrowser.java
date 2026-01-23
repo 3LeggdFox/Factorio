@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.InputMismatchException;
@@ -26,9 +27,11 @@ public class RecipeBrowser {
     ArrayList<String> required_resources = new ArrayList<>();
     HashSet<String> cycle_check = new HashSet<>();
 
-    private static final String RECIPE_FILE = "recipes.txt";
-    private static final String STATION_FILE = "stations.txt";
-    private static final String BASE_RESOURCE_FILE = "base.txt";
+    private static final String DATA_FOLDER = "essentialFiles/";
+    private static final String RECIPE_FILE = DATA_FOLDER + "recipes.txt";
+    private static final String STATION_FILE = DATA_FOLDER + "stations.txt";
+    private static final String BASE_RESOURCE_FILE = DATA_FOLDER + "base.txt";
+    static final String CONFIG_FILE = DATA_FOLDER + "config.txt";
     static final String FACTORY_FOLDER = "factories/";
     static final String TEMPLATE_FOLDER = "factoryTemplates/";
 
@@ -44,9 +47,16 @@ public class RecipeBrowser {
         this.stdin = scanner;
     }
 
-    public static RecipeBrowser initialiseBrowser(String factory, Scanner scanInp) {
+    public static RecipeBrowser initialiseBrowser(Scanner scanInp) {
         try {
-            File file = new File(RECIPE_FILE);
+            File file = new File(CONFIG_FILE);
+            String factory;
+            try (Scanner scanner = new Scanner(file))
+            {
+                factory = scanner.nextLine();
+                scanner.close();
+            }
+            file = new File(RECIPE_FILE);
             Scanner scanner = new Scanner(file);
             ArrayList<Recipe> recipes = new ArrayList<Recipe>();
             HashSet<String> allMaterials = new HashSet<>();
@@ -225,7 +235,9 @@ public class RecipeBrowser {
                 return recipe;
             }
         }
-        throw new InvalidMaterialException("Error: No light oil cracking recipe.");
+        System.err.println("Error: No light oil cracking recipe.");
+        System.exit(1);
+        return null;
     }
 
     private Recipe getHeavyCrackingRecipe() {
@@ -234,14 +246,15 @@ public class RecipeBrowser {
                 return recipe;
             }
         }
-        throw new InvalidMaterialException("Error: No heavy oil cracking recipe.");
+        System.err.println("Error: No heavy oil cracking recipe.");
+        System.exit(1);
+        return null;
     }
 
     private void crackOils(int prod_mod_level) {
         double extra_heavy = -resources.getOrDefault("heavy_oil", 0.0);
         double extra_light = -resources.getOrDefault("light_oil", 0.0);
         double extra_petrol = -resources.getOrDefault("petrol", 0.0);
-        boolean needed_heavy = all_resources.getOrDefault("heavy_oil", 0.0) > 0;
         boolean needed_light = all_resources.getOrDefault("light_oil", 0.0) > 0;
         boolean needed_petrol = all_resources.getOrDefault("petrol", 0.0) > 0;
         Recipe heavy_recipe = getHeavyCrackingRecipe();
@@ -251,11 +264,8 @@ public class RecipeBrowser {
             priority = "petrol";
         } else if (needed_light && extra_light == 0) {
             priority = "light_oil";
-        } else if (needed_heavy && extra_heavy == 0) {
-            return;
         } else {
-            System.out.println("Apparently you didn't account for everything oil-related.");
-            return;
+            return; // No cracking needed (cannot crack for heavy_oil)
         }
         Recipe recipe = null;
         int prio = -1;
@@ -427,7 +437,13 @@ public class RecipeBrowser {
     }
 
     private void printRecipePath(int prod_mod_level) {
+        boolean first = true;
         for (Recipe recipe : recipe_order) {
+            if (!first) {
+                System.out.println();
+            } else {
+                first = false;
+            }
             Station station = pickStation(recipe);
             System.out.println(recipe.toStringSpecificVerbose(station, prod_mod_level));
         }
@@ -502,6 +518,7 @@ public class RecipeBrowser {
         steps.clear();
         resources.clear();
         all_resources.clear();
+        required_resources = new ArrayList<>();
         recipe_order = new ArrayList<>();
     }
 
@@ -691,6 +708,13 @@ public class RecipeBrowser {
         return chooseRecipe(setting_name);
     }
 
+    private String getRecipeOrEmpty(String setting_name) {
+        if (settings.containsKey(setting_name)) {
+            return settings.get(setting_name).value;
+        }
+        return "";
+    }
+
     public Station pickStation(Recipe recipe) {
         Station station = null;
         int highestPrio = -1;
@@ -705,6 +729,7 @@ public class RecipeBrowser {
             if (setting.value.equals("yes")) {
                 Station search_station = stations.get(station_name);
                 if (search_station == null) {
+                    reset();
                     throw new StationNotFoundException("Error: Recipe uses station not found in station.txt.",
                             station_name, true);
                 }
@@ -715,6 +740,7 @@ public class RecipeBrowser {
             }
         }
         if (station == null) {
+            reset();
             throw new StationNotFoundException("Error: Factory does not have any required station.", recipe.toString(),
                     false);
         }
@@ -731,7 +757,7 @@ public class RecipeBrowser {
         return station.getProd(Integer.parseInt(moduleSetting.value));
     }
 
-    public void query(String line) throws ParsingException, InvalidMaterialException {
+    public void query(String line) {
         Query query = Parser.parseQuery(line, toggle_verbose);
         query.query(this);
     }
@@ -747,14 +773,14 @@ public class RecipeBrowser {
     }
 
     private boolean checkCycle() {
-        String water = getRecipeOrChoose("water");
-        String steam = getRecipeOrChoose("steam");
-        String acid = getRecipeOrChoose("sulfuric_acid");
-        String coal = getRecipeOrChoose("coal");
-        String carbon = getRecipeOrChoose("carbon");
-        String carbonic_chunk = getRecipeOrChoose("carbonic_chunk");
-        String metallic_chunk = getRecipeOrChoose("metallic_chunk");
-        String oxide_chunk = getRecipeOrChoose("oxide_chunk");
+        String water = getRecipeOrEmpty("water");
+        String steam = getRecipeOrEmpty("steam");
+        String acid = getRecipeOrEmpty("sulfuric_acid");
+        String coal = getRecipeOrEmpty("coal");
+        String carbon = getRecipeOrEmpty("carbon");
+        String carbonic_chunk = getRecipeOrEmpty("carbonic_chunk");
+        String metallic_chunk = getRecipeOrEmpty("metallic_chunk");
+        String oxide_chunk = getRecipeOrEmpty("oxide_chunk");
         boolean cycle = false;
         if (water.equals("default") && steam.equals("boiling")) {
             cycle = true;
@@ -845,13 +871,14 @@ public class RecipeBrowser {
                     "Setting '" + setting_name + "' was updated from '" + old_value + "' to '" + new_setting.value
                             + "'.");
         }
-        changeSetting(new Setting(setting_name, old_value));
     }
 
     public void changeSetting(Setting setting) {
+        Setting old_setting = settings.get(setting.topic);
         settings.put(setting.topic, setting);
         if (checkCycle()) {
-            settings.put(setting.topic, setting);
+            settings.put(setting.topic, old_setting);
+            reset();
             throw new CycleException(setting.topic);
         }
         try (FileWriter writer = new FileWriter(FACTORY_FOLDER + factory)) {
@@ -902,5 +929,11 @@ class InvalidMaterialException extends QueryException {
 class CycleException extends QueryException {
     public CycleException(String material) {
         super("Error: New '" + material + "' setting created a cycle.");
+    }
+
+    public String getMessage() {
+        String message = super.getMessage();
+        message += "\nCyclic recipes include:\n\ncoal <-> carbon\nwater <-> steam (<-> sulfuric_acid)\nmetallic_chunk <-> carbonic_chunk <-> oxide_chunk";
+        return message;
     }
 }

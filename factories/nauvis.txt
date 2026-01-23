@@ -38,3 +38,4 @@ copper_ore = basic
 OilRefinery = yes
 heavy_oil = advanced
 light_oil = advanced
+Foundry = no

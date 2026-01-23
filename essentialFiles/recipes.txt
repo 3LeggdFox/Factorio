@@ -160,8 +160,8 @@
 3 uranium238(reprocessing) = 5 depleted_uranium_fuel_cell. Takes 60 seconds, needs Centrifuge. Uses productivity modules
 41 uranium235(kovarex), 2 uranium238(kovarex) = 40 uranium235, 5 uranium238. Takes 60 seconds, needs Centrifuge. Uses productivity modules
 1 nuclear_fuel = 1 rocket_fuel, 1 uranium235. Takes 90 seconds, needs Centrifuge. Uses productivity modules
-10 stone(iron), 250 molten_iron(iron) = 1 calcite, 500 lava. Takes 16 seconds, needs Foundry. Uses productivity modules
-15 stone(copper), 250 molten_copper(copper) = 1 calcite, 500 lava. Takes 16 seconds, needs Foundry. Uses productivity modules
+10 stone(lava_iron), 250 molten_iron(lava_iron) = 1 calcite, 500 lava. Takes 16 seconds, needs Foundry. Uses productivity modules
+15 stone(lava_copper), 250 molten_copper(lava_copper) = 1 calcite, 500 lava. Takes 16 seconds, needs Foundry. Uses productivity modules
 2 iron(molten) = 20 molten_iron. Takes 3.2 seconds, needs Foundry. Uses productivity modules
 2 copper(molten) = 20 molten_copper. Takes 3.2 seconds, needs Foundry. Uses productivity modules
 1 steel(molten) = 30 molten_iron. Takes 3.2 seconds, needs Foundry. Uses productivity modules

@@ -1,7 +1,9 @@
+
 public class MathQuery extends Query {
     double number1;
     char operation;
     double number2;
+  
 
     public MathQuery(double number1, char operation, double number2)
     {

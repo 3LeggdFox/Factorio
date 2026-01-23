@@ -89,9 +89,8 @@ public class FactoryQuery extends Query {
                 } else {
                     System.err.println("Error: Factory name '" + target + "' already exists.");
                 }
-                break;
             case "change":
-                try (FileWriter writer = new FileWriter("config.txt")) {
+                try (FileWriter writer = new FileWriter(RecipeBrowser.CONFIG_FILE)) {
                     int end = browser.factory.lastIndexOf('.');
                     String original = browser.factory.substring(0, end);
                     String new_factory = target + ".txt";
