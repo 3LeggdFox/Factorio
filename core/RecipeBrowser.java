@@ -324,7 +324,12 @@ public class RecipeBrowser {
         } else {
             heavy_to_light_out = 0;
         }
-        double light_to_petrol_out = light_out / petrol_out;
+        double light_to_petrol_out;
+        if (petrol_out != 0) {
+            light_to_petrol_out = light_out / petrol_out;
+        } else {
+            light_to_petrol_out = 0;
+        }
         double heavy_func = Math.max(
                 (extra_heavy * 30 - heavy_to_light_out * 30 * light_to_petrol_out * extra_petrol
                         + light_to_petrol_out * 20 * light_prod * (extra_heavy - heavy_to_light_out * extra_light))
@@ -599,7 +604,7 @@ public class RecipeBrowser {
         return getUserInt(0, 3);
     }
 
-    public void listQuery(String item, boolean verbose) {
+    public void listQuery(String item) {
         if (item.equals("recipes")) {
             for (Recipe recipe : recipes) {
                 System.out.println(recipe);

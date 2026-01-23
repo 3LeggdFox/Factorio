@@ -3,17 +3,17 @@ import core.*;
 
 public class FactorioQueries {
     public static void main(String[] args) {
-        Scanner scanInp = new Scanner(System.in);
-        RecipeBrowser recipes = RecipeBrowser.initialiseBrowser(scanInp);
+        Scanner stdIn = new Scanner(System.in);
+        RecipeBrowser recipes = RecipeBrowser.initialiseBrowser(stdIn);
         while (true) {
             System.out.print("Command: ");
             try {
-                String nextLine = scanInp.nextLine();
+                String nextLine = stdIn.nextLine();
                 recipes.query(nextLine);
-                System.out.println();
+                System.out.println(); // Extra spacing
             } catch (QueryException e) {
                 System.err.println(e.getMessage());
-                System.out.println();
+                System.out.println(); // Extra spacing
             }
         }
     }

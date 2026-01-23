@@ -1,14 +1,32 @@
 package core;
 
+/**
+ * ListQuery
+ * Class to manage queries regarding listing factory or recipe information for a
+ * given object
+ * 
+ * @version 1.0
+ */
 public class ListQuery extends Query {
     String material;
 
-    public ListQuery(String material, boolean verbose) {
+    /**
+     * Constructor
+     * 
+     * @param material The material whose recipes are being listed (can be 'all' or
+     *                 'settings')
+     */
+    public ListQuery(String material) {
         this.material = material;
-        this.verbose = verbose;
     }
 
+    /**
+     * Calls the RecipeBrowser's function to print the list of recipes/settings
+     * 
+     * @param browser The RecipeBrowser object storing all relevant factory and file
+     *                information
+     */
     public void query(RecipeBrowser browser) {
-        browser.listQuery(material, verbose);
+        browser.listQuery(material);
     }
 }

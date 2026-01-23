@@ -1,13 +1,30 @@
 package core;
 
+/**
+ * HelpQuery
+ * Class to manage queries about the commands of the interface
+ * 
+ * @version 1.0
+ */
 public class HelpQuery extends Query {
     String command;
 
-    public HelpQuery(String command, boolean verbose) {
+    /**
+     * Constructor
+     * 
+     * @param command Specifies which command to detail. Can be null (details all
+     *                commands)
+     */
+    public HelpQuery(String command) {
         this.command = command;
-        this.verbose = verbose;
     }
 
+    /**
+     * Details the specified command usage (or all if command == null)
+     * 
+     * @param browser The RecipeBrowser object storing all relevant factory and file
+     *                information
+     */
     public void query(RecipeBrowser browser) {
         if (command == null) {
             command = "default";
@@ -68,6 +85,9 @@ public class HelpQuery extends Query {
         }
     }
 
+    /**
+     * Helper function to print details of the 'get' command
+     */
     private void printGet() {
         System.out.println("[verbose] get <material1> in [amount] <material2> [prod <productivity_module_level>]");
         System.out.println("    Returns the amount of material1 in [amount *] material2.");
@@ -78,8 +98,11 @@ public class HelpQuery extends Query {
         System.out.println();
     }
 
+    /**
+     * Helper function to print details of the 'machines' command
+     */
     private void printMachines() {
-        System.out.println("[verbose] machines in [quantity] <material> [prod <productivity_module_level>]");
+        System.out.println("[verbose] machines in [<quantity>] <material> [prod <productivity_module_level>]");
         System.out.println(
                 "    Returns the minimum number of machines needed to achieve\n    quantity (defaults to 1) material per second.");
         System.out.println("    Prints the recipes used and shows decimal places for machine number if verbose.");
@@ -87,6 +110,9 @@ public class HelpQuery extends Query {
         System.out.println();
     }
 
+    /**
+     * Helper function to print details of the 'list' command
+     */
     private void printList() {
         System.out.println("list <material>");
         System.out.println("    Lists all recipes involving material.");
@@ -95,20 +121,29 @@ public class HelpQuery extends Query {
         System.out.println();
     }
 
+    /**
+     * Helper function to print details of the 'setting' command
+     */
     private void printSetting() {
         System.out.println("setting <setting_topic>");
         System.out.println("    Prints the setting.");
         System.out.println();
     }
 
+    /**
+     * Helper function to print details of the 'time' command
+     */
     private void printTime() {
-        System.out.println("[verbose] time <material> [prod <productivity_module_level>]");
+        System.out.println("[verbose] time for <material> [prod <productivity_module_level>]");
         System.out.println("    Returns the amount of time it takes for the chosen recipe to complete.");
         System.out.println("    Prints the recipe details if verbose.");
         System.out.println("    Uses productivity modules if prod <integer> is included.");
         System.out.println();
     }
 
+    /**
+     * Helper function to print details of the 'update' command
+     */
     private void printUpdate() {
         System.out.println("update <setting_topic>");
         System.out.println("    Prompts the user to choose the setting for the given topic.");
@@ -116,20 +151,30 @@ public class HelpQuery extends Query {
         System.out.println();
     }
 
+    /**
+     * Helper function to print details of the 'search' command
+     */
     private void printSearch() {
         System.out.println("search <word1> [<logical_operator> <word2>]");
         System.out.println("    Prints a list of materials containing word1.");
         System.out.println("    logical_operator can either be 'and' or 'or'.");
-        System.out.println("    If the second argument is supplied, prints materials based on both words and logical_operator.");
+        System.out.println(
+                "    If the second argument is supplied, prints materials based on both words and logical_operator.");
         System.out.println();
     }
 
+    /**
+     * Helper function to print details of the math command
+     */
     private void printMath() {
         System.out.println("<number1> <operation> <number2>");
         System.out.println("    Prints the result of basic mathematical operations.");
         System.out.println();
     }
 
+    /**
+     * Helper function to print details of the 'factory' command
+     */
     private void printFactory() {
         System.out.println("factory [<command> <target*>]");
         System.out.println("    Prints the name of the factory.");
@@ -147,31 +192,41 @@ public class HelpQuery extends Query {
         System.out.println("        copy <new_factory_name>");
         System.out.println("            Copies the current factory to a new one with the given name.");
         System.out.println();
-        System.out.println("        list ['templates']");
+        System.out.println("        list [templates]");
+        System.out.println("            *target is not required.");
         System.out.println("            Prints the names of all factories.");
         System.out.println("            Prints the names of all templates if 'templates' is appended to command.");
         System.out.println();
         System.out.println("        template <new_template_name>");
-        System.out.println("            Creates a new template from the current factory settings.");
+        System.out
+                .println("            Creates a new template under the given name with the current factory settings.");
         System.out.println();
     }
 
+    /**
+     * Helper function to print details of the 'verbose' command
+     */
     private void printVerbose() {
         System.out.println("verbose");
         System.out.println("    Toggles verbose on/off.");
         System.out.println();
     }
 
+    /**
+     * Helper function to print details of the 'help' command
+     */
     private void printHelp() {
-        System.out.println("help [command]");
+        System.out.println("help [<command>]");
         System.out.println("    Lists all commands and usage with syntax.");
         System.out.println("    Lists specific command's usage and syntax if a command is included.");
         System.out.println();
     }
 
+    /**
+     * Helper function to print details of the 'exit' command
+     */
     private void printExit() {
         System.out.println("exit");
         System.out.println("    Ends the process.");
     }
-
 }
