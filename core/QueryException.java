@@ -1,3 +1,4 @@
+package core;
 
 public abstract class QueryException extends RuntimeException {
 

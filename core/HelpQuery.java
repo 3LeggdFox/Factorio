@@ -1,3 +1,5 @@
+package core;
+
 public class HelpQuery extends Query {
     String command;
 

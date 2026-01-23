@@ -1,3 +1,5 @@
+package core;
+
 public abstract class Query {
     boolean verbose;
 

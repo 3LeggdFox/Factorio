@@ -1,3 +1,5 @@
+package core;
+
 public class Material {
     double quantity;
     String name;

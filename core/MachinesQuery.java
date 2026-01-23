@@ -1,3 +1,5 @@
+package core;
+
 public class MachinesQuery extends Query {
     double number_of_output;
     String output;

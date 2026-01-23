@@ -1,3 +1,5 @@
+package core;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -27,13 +29,14 @@ public class RecipeBrowser {
     ArrayList<String> required_resources = new ArrayList<>();
     HashSet<String> cycle_check = new HashSet<>();
 
-    private static final String DATA_FOLDER = "essentialFiles/";
+    private static final String CORE_FOLDER = "core/";
+    private static final String DATA_FOLDER = CORE_FOLDER + "essentialFiles/";
     private static final String RECIPE_FILE = DATA_FOLDER + "recipes.txt";
     private static final String STATION_FILE = DATA_FOLDER + "stations.txt";
     private static final String BASE_RESOURCE_FILE = DATA_FOLDER + "base.txt";
     static final String CONFIG_FILE = DATA_FOLDER + "config.txt";
-    static final String FACTORY_FOLDER = "factories/";
-    static final String TEMPLATE_FOLDER = "factoryTemplates/";
+    static final String FACTORY_FOLDER = CORE_FOLDER + "factories/";
+    static final String TEMPLATE_FOLDER = CORE_FOLDER + "factoryTemplates/";
 
     public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings,
             HashMap<String, Station> stations, String factory, HashSet<String> allMaterials,
@@ -692,20 +695,6 @@ public class RecipeBrowser {
             }
         }
         return recipe;
-    }
-
-    private String chooseRecipe(String material) {
-        ArrayList<Recipe> recipe_options = findRecipes(material);
-        String recipe_name = userChooseRecipe(recipe_options, material);
-        addNewSetting(new Setting(material, recipe_name), false);
-        return recipe_name;
-    }
-
-    private String getRecipeOrChoose(String setting_name) {
-        if (settings.containsKey(setting_name)) {
-            return settings.get(setting_name).topic;
-        }
-        return chooseRecipe(setting_name);
     }
 
     private String getRecipeOrEmpty(String setting_name) {

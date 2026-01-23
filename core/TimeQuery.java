@@ -1,3 +1,5 @@
+package core;
+
 public class TimeQuery extends Query {
     String material;
     int prod_mod_level;

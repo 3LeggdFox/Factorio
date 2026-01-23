@@ -1,3 +1,5 @@
+package core;
+
 public class ToggleVerboseQuery extends Query {
     
     public ToggleVerboseQuery() {}

@@ -1,3 +1,4 @@
+package core;
 
 public class MathQuery extends Query {
     double number1;

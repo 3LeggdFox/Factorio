@@ -1,3 +1,5 @@
+package core;
+
 public class SearchQuery extends Query {
     String search_string1;
     boolean logic_is_and;

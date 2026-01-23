@@ -1,3 +1,5 @@
+package core;
+
 public class ListQuery extends Query {
     String material;
 

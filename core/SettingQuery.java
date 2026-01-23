@@ -1,3 +1,5 @@
+package core;
+
 public class SettingQuery extends Query {
     String topic;
 

@@ -1,4 +1,5 @@
 import java.util.Scanner;
+import core.*;
 
 public class FactorioQueries {
     public static void main(String[] args) {

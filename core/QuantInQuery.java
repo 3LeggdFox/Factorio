@@ -1,3 +1,4 @@
+package core;
 
 public class QuantInQuery extends Query {
     String ingredient;

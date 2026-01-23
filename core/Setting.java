@@ -1,3 +1,5 @@
+package core;
+
 public class Setting {
     String topic;
     String value;
