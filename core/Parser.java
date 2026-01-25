@@ -27,7 +27,7 @@ public class Parser {
      * @param line The recipe line to be parsed
      * @return Recipe object containing the information from the parsed line
      */
-    public static Recipe parseRecipe(String line) {
+    public static Recipe parseRecipe(String line, int line_number) {
         /*
          * Format:
          * <number_of_output1> <output1>[, <number_of_output2> <output2>[...]] =
@@ -120,7 +120,7 @@ public class Parser {
             stations.add("Assembly3");
         }
 
-        return new Recipe(inputs, outputs, stations, crafting_time, has_req, can_prod, alt_name);
+        return new Recipe(inputs, outputs, stations, crafting_time, has_req, can_prod, alt_name, line_number);
     }
 
     /**

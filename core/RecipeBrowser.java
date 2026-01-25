@@ -19,7 +19,7 @@ public class RecipeBrowser {
     String factory;
     Scanner stdin;
     HashMap<String, Station> stations;
-    HashSet<String> all_materials;
+    HashMap<String, Integer> all_materials;
     HashSet<String> base_ingredients;
     boolean toggle_verbose = false;
     HashMap<Recipe, Double> steps = new HashMap<>();
@@ -39,13 +39,13 @@ public class RecipeBrowser {
     static final String TEMPLATE_FOLDER = CORE_FOLDER + "factoryTemplates/";
 
     public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings,
-            HashMap<String, Station> stations, String factory, HashSet<String> allMaterials,
+            HashMap<String, Station> stations, String factory, HashMap<String, Integer> all_materials,
             HashSet<String> base_ingredients, Scanner scanner) {
         this.recipes = recipes;
         this.settings = settings;
         this.stations = stations;
         this.factory = factory;
-        this.all_materials = allMaterials;
+        this.all_materials = all_materials;
         this.base_ingredients = base_ingredients;
         this.stdin = scanner;
     }
@@ -54,26 +54,35 @@ public class RecipeBrowser {
         try {
             File file = new File(CONFIG_FILE);
             String factory;
-            try (Scanner scanner = new Scanner(file))
-            {
+            try (Scanner scanner = new Scanner(file)) {
                 factory = scanner.nextLine();
                 scanner.close();
             }
             file = new File(RECIPE_FILE);
             Scanner scanner = new Scanner(file);
             ArrayList<Recipe> recipes = new ArrayList<Recipe>();
-            HashSet<String> allMaterials = new HashSet<>();
+            HashMap<String, Integer> all_materials = new HashMap<>();
+            int line_number = 0;
             while (scanner.hasNextLine()) {
-                Recipe recipe = Parser.parseRecipe(scanner.nextLine());
-                for (Material input : recipe.inputs) {
-                    allMaterials.add(input.name);
-                }
+                Recipe recipe = Parser.parseRecipe(scanner.nextLine(), line_number);
                 for (Material output : recipe.outputs) {
-                    allMaterials.add(output.name);
+                    if (all_materials.getOrDefault(output.name, 313) > line_number) {
+                        all_materials.put(output.name, line_number);
+                    }
+                }
+                for (Material input : recipe.inputs) {
+                    if (all_materials.getOrDefault(input.name, 626) > line_number+313) {
+                        all_materials.put(input.name, line_number+313);
+                    }
                 }
                 recipes.add(recipe);
+                line_number++;
             }
             scanner.close();
+
+            for (String material : all_materials.keySet()) {
+                all_materials.put(material, all_materials.get(material) % 313);
+            }
 
             file = new File(STATION_FILE);
             scanner = new Scanner(file);
@@ -100,7 +109,7 @@ public class RecipeBrowser {
                 base_ingredients.add(scanner.nextLine());
             }
             scanner.close();
-            RecipeBrowser browser = new RecipeBrowser(recipes, settings, stations, factory, allMaterials,
+            RecipeBrowser browser = new RecipeBrowser(recipes, settings, stations, factory, all_materials,
                     base_ingredients, scanInp);
             browser.initCheckCycle();
             return browser;
@@ -199,8 +208,10 @@ public class RecipeBrowser {
         if (verbose) {
             printRecipePath(prod_mod_level);
         }
-        for (String material : resources.keySet()) {
-            double quantity = resources.get(material);
+        ArrayList<String> sorted = new ArrayList<>(all_materials.keySet());
+        Collections.sort(sorted, Comparator.comparing((material) -> all_materials.get(material)));
+        for (String material : sorted) {
+            double quantity = resources.getOrDefault(material, 0.0);
             if (quantity >= 0.001 || quantity <= -0.001) {
                 System.out.println(String.format("%s: %.3f", material, quantity));
             }
@@ -213,9 +224,11 @@ public class RecipeBrowser {
         if (verbose) {
             printRecipePath(prod_mod_level);
         }
-        for (String material : all_resources.keySet()) {
-            double quantity = all_resources.get(material);
-            if (quantity != 0) {
+        ArrayList<String> sorted = new ArrayList<>(all_materials.keySet());
+        Collections.sort(sorted, Comparator.comparing((material) -> all_materials.get(material)));
+        for (String material : sorted) {
+            double quantity = all_resources.getOrDefault(material, 0.0);
+            if (quantity >= 0.001 || quantity <= -0.001) {
                 System.out.println(String.format("%s: %.3f", material, quantity));
             }
         }
@@ -837,7 +850,7 @@ public class RecipeBrowser {
             old_value = settings.get(setting_name).value;
         }
         Setting new_setting;
-        if (all_materials.contains(setting_name)) {
+        if (all_materials.containsKey(setting_name)) {
             ArrayList<Recipe> possible_recipes = findRecipes(setting_name);
             new_setting = new Setting(setting_name, userChooseRecipe(possible_recipes, setting_name));
             if (!setting_is_new) {

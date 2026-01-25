@@ -127,6 +127,14 @@
 90 heavy_oil(liquefaction), 20 light_oil(liquefaction), 10 petrol(liquefaction) = 10 coal, 25 heavy_oil, 50 steam. Takes 5 seconds, needs OilRefinery. Uses productivity modules
 30 light_oil = 30 water, 40 heavy_oil. Takes 2 seconds, needs ChemicalPlant, Biochamber. Uses productivity modules
 20 petrol(cracking) = 30 water, 30 light_oil. Takes 2 seconds, needs ChemicalPlant, Biochamber. Uses productivity modules
+10 lubricant = 10 heavy_oil. Takes 10 seconds, needs ChemicalPlant. Uses productivity modules
+50 sulfuric_acid = 1 iron, 5 sulfur, 100 water. Takes 1 seconds, needs ChemicalPlant, CryogenicPlant. Uses productivity modules
+75 thruster_fuel = 2 carbon, 10 water. Takes 2 seconds, needs ChemicalPlant. Uses productivity modules
+75 thruster_oxidizer = 2 iron_ore, 10 water. Takes 2 seconds, needs ChemicalPlant. Uses productivity modules
+500 molten_iron = 50 iron_ore, 1 calcite. Takes 32 seconds, needs Foundry. Uses productivity modules
+500 molten_copper = 50 copper_ore, 1 calcite. Takes 32 seconds, needs Foundry. Uses productivity modules
+100 holmium_solution = 1 stone, 2 holmium_ore, 10 water. Takes 10 seconds, needs ChemicalPlant. Uses productivity modules
+10 electrolyte = 1 stone, 10 heavy_oil, 10 holmium_solution. Takes 5 seconds, needs EMPlant. Uses productivity modules
 1 solid_fuel = 20 petrol. Takes 1 seconds, needs ChemicalPlant. Uses productivity modules
 1 solid_fuel(light) = 10 light_oil. Takes 1 seconds, needs ChemicalPlant. Uses productivity modules
 1 solid_fuel(heavy) = 20 heavy_oil. Takes 1 seconds, needs ChemicalPlant. Uses productivity modules
@@ -303,11 +311,3 @@
 1 rocket_turret = 20 steel, 20 cog, 4 blue_circuit, 20 carbon_fiber, 4 rocket_launcher. Takes 10 seconds
 1 tesla_turret = 10 blue_circuit, 50 superconductor, 10 supercapacitor, 1 tesla_gun, 500 electrolyte. Takes 30 seconds, needs EMPlant
 1 railgun_turret = 30 tungsten_plate, 50 superconductor, 20 carbon_fiber, 100 quantum_processor, 100 fluoroketone_cold. Takes 10 seconds, needs CryogenicPlant
-10 lubricant = 10 heavy_oil. Takes 10 seconds, needs ChemicalPlant. Uses productivity modules
-50 sulfuric_acid = 1 iron, 5 sulfur, 100 water. Takes 1 seconds, needs ChemicalPlant, CryogenicPlant. Uses productivity modules
-75 thruster_fuel = 2 carbon, 10 water. Takes 2 seconds, needs ChemicalPlant. Uses productivity modules
-75 thruster_oxidizer = 2 iron_ore, 10 water. Takes 2 seconds, needs ChemicalPlant. Uses productivity modules
-500 molten_iron = 50 iron_ore, 1 calcite. Takes 32 seconds, needs Foundry. Uses productivity modules
-500 molten_copper = 50 copper_ore, 1 calcite. Takes 32 seconds, needs Foundry. Uses productivity modules
-100 holmium_solution = 1 stone, 2 holmium_ore, 10 water. Takes 10 seconds, needs ChemicalPlant. Uses productivity modules
-10 electrolyte = 1 stone, 10 heavy_oil, 10 holmium_solution. Takes 5 seconds, needs EMPlant. Uses productivity modules

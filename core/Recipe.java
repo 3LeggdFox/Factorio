@@ -12,9 +12,10 @@ public class Recipe {
     boolean can_prod;
     String alt_name;
     boolean has_cycle = false;
+    int recipe_number;
 
     public Recipe(ArrayList<Material> inputs, ArrayList<Material> outputs, ArrayList<String> stations,
-            double crafting_time, boolean has_req, boolean can_prod, String alt_name) {
+            double crafting_time, boolean has_req, boolean can_prod, String alt_name, int recipe_number) {
         this.inputs = inputs;
         this.outputs = outputs;
         this.stations = stations;
@@ -22,13 +23,13 @@ public class Recipe {
         this.has_req = has_req;
         this.can_prod = can_prod;
         this.alt_name = alt_name;
+        this.recipe_number = recipe_number;
         for (Material material : inputs) {
             if (hasOutput(material.name)) {
                 this.has_cycle = true;
                 return;
             }
         }
-
     }
 
     public double amountOutput(String material) {
@@ -55,6 +56,12 @@ public class Recipe {
 
     public boolean hasInput(String material) {
         return amountInput(material) != 0;
+    }
+
+    public ArrayList<Material> getMaterials() {
+        ArrayList<Material> materials = new ArrayList<>(inputs);
+        materials.addAll(outputs);
+        return materials;
     }
 
     public boolean hasStation(String station) {
@@ -86,7 +93,7 @@ public class Recipe {
         for (String station : stations) {
             new_stations.add(station);
         }
-        return new Recipe(new_inputs, new_outputs, new_stations, crafting_time, has_req, can_prod, alt_name);
+        return new Recipe(new_inputs, new_outputs, new_stations, crafting_time, has_req, can_prod, alt_name, recipe_number);
     }
 
     public String toString() {

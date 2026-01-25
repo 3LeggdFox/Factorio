@@ -18,8 +18,8 @@ public class QuantInQuery extends Query {
     }
 
     public void query(RecipeBrowser browser) {
-        boolean ingredient_is_real = browser.all_materials.contains(ingredient);
-        boolean product_is_real = browser.all_materials.contains(product);
+        boolean ingredient_is_real = browser.all_materials.containsKey(ingredient);
+        boolean product_is_real = browser.all_materials.containsKey(product);
         boolean all = ingredient.equals("all");
         boolean base = ingredient.equals("base");
         if (!product_is_real || (!ingredient_is_real && !all && !base)) {

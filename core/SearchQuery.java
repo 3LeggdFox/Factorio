@@ -29,7 +29,7 @@ public class SearchQuery extends Query {
             searching_string += search_string2;
         }
         System.out.println("Materials matching '" + searching_string + "':");
-        browser.searchQuery(search_string1, logic_is_and, search_string2, has_second_argument, browser.all_materials, false);
+        browser.searchQuery(search_string1, logic_is_and, search_string2, has_second_argument, browser.all_materials.keySet(), false);
         System.out.println("\nSettings matching '" + searching_string + "':");
         browser.searchQuery(search_string1, logic_is_and, search_string2, has_second_argument, browser.settings.keySet(), true);
     }
