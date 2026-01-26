@@ -46,7 +46,7 @@ public class FactoryQuery extends Query {
                 if (name == null) {
                     name = target;
                 }
-                System.err.println("Error: Factory name '" + name + "' already exists.");
+                throw new QueryException("Error: Factory name '" + name + "' already exists.");
             } else {
                 e.printStackTrace();
                 System.exit(1);
@@ -103,8 +103,7 @@ public class FactoryQuery extends Query {
                 if (target.equals("templates")) {
                     using_template = true; // Flag to use template folder
                 } else { // Case where called 'factory list *word*' where word != templates
-                    System.err.println("Error: Unexpected word after 'factory list'.");
-                    return;
+                    throw new QueryException("Error: Unexpected word after 'factory list'.");
                 }
             }
         }

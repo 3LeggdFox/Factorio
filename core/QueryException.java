@@ -1,24 +1,32 @@
 package core;
 
-public abstract class QueryException extends RuntimeException {
+/**
+ * QueryException
+ * Exception parent class for all exceptions brought about by queries
+ * 
+ * @version 1.0
+ */
+public class QueryException extends RuntimeException {
 
-    public QueryException()
-    {
+    public QueryException() {
         super();
     }
 
-    public QueryException(String message)
-    {
+    public QueryException(String message) {
         super(message);
     }
 }
 
-class InvalidModuleLevelException extends QueryException
-{
+/**
+ * InvalidModuleLevelException
+ * Exception for invalid module level input by user
+ * 
+ * @version 1.0
+ */
+class InvalidModuleLevelException extends QueryException {
     int level;
 
-    public InvalidModuleLevelException(int level)
-    {
+    public InvalidModuleLevelException(int level) {
         super();
         this.level = level;
     }

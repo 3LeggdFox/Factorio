@@ -39,8 +39,7 @@ public class MachinesQuery extends Query {
     public void query(RecipeBrowser browser) {
         boolean output_is_real = browser.all_materials.containsKey(output); // Checks that the output is a material
         if (!output_is_real) {
-            System.err.println("Error: '" + output + "' not found in material list.");
-            return;
+            throw new QueryException("Error: '" + output + "' not found in material list.");
         }
         browser.getMachinesIn(output, number_of_output, prod_mod_level, verbose);
     }

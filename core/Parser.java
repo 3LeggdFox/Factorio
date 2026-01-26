@@ -27,7 +27,7 @@ public class Parser {
      * @param line The recipe line to be parsed
      * @return Recipe object containing the information from the parsed line
      */
-    public static Recipe parseRecipe(String line, int line_number) {
+    public static Recipe parseRecipe(String line) {
         /*
          * Format:
          * <number_of_output1> <output1>[, <number_of_output2> <output2>[...]] =
@@ -120,7 +120,7 @@ public class Parser {
             stations.add("Assembly3");
         }
 
-        return new Recipe(inputs, outputs, stations, crafting_time, has_req, can_prod, alt_name, line_number);
+        return new Recipe(inputs, outputs, stations, crafting_time, has_req, can_prod, alt_name);
     }
 
     /**
@@ -349,7 +349,8 @@ public class Parser {
     }
 
     /**
-     * Grabs the next string in the line. Throws exception if no word is found
+     * Grabs the next word in the line and moves cursor to the end of it. Throws
+     * exception if no word is found
      * 
      * @return String containing the next non-whitespaces in the line
      */
@@ -369,9 +370,11 @@ public class Parser {
     }
 
     /**
-     * Tries to grab the next word in the line. Does not throw exception if no word is found
+     * Tries to grab the next word in the line and move the cursor to the end of it.
+     * Does not throw exception or move cursor if no word is found
      * 
-     * @return String of the next non-whitespaces in the line, null if no word is found
+     * @return String of the next non-whitespaces in the line, null if no word is
+     *         found
      */
     private String tryGetWord() {
         trim(); // Removes excess whitespaces
@@ -388,7 +391,8 @@ public class Parser {
     }
 
     /**
-     * Grabs the next double/int in the line. Throws exception if no number is found
+     * Grabs the next double/int in the line and moves cursor to the end of it.
+     * Throws exception if no number is found
      * 
      * @return double of the next non-whitespaces in the line
      */
@@ -397,7 +401,9 @@ public class Parser {
     }
 
     /**
-     * Grabs the next double/int in the line. Throws exception if no number is found
+     * Grabs the next double/int in the line and moves cursor to the end of it.
+     * Throws exception if no number is found
+     * 
      * @param int_only boolean controlling whether decimal point is accepted/read
      * @return double of the next non-whitespaces in the line
      */
@@ -423,18 +429,23 @@ public class Parser {
     }
 
     /**
-     * Tries to grab the next number in the line. Does not throw exception if no number is found
+     * Tries to grab the next number in the line and move the cursor to the end of
+     * it. Does not throw exception or move cursor if no number is found
      * 
-     * @return Double of the next non-whitespaces in the line, null if no numbers found
+     * @return Double of the next non-whitespaces in the line, null if no numbers
+     *         found
      */
     private Double tryGetNumber() {
         return tryGetNumber(false);
     }
 
     /**
-     * Tries to grab the next double/int in the line. Does not throw exception if no double/int is found
+     * Tries to grab the next double/int in the line and move cursor to the end of
+     * it. Does not throw exception or move cursorif no double/int is found
+     * 
      * @param int_only boolean controlling whether decimal point is accepted/read
-     * @return Double of the next non-whitespaaces in the line, null if no numbers found
+     * @return Double of the next non-whitespaaces in the line, null if no numbers
+     *         found
      */
     private Double tryGetNumber(boolean int_only) {
         trim(); // Removes whitespaces
@@ -455,13 +466,19 @@ public class Parser {
         return Double.parseDouble(line.substring(initPos, position));
     }
 
+    /**
+     * Grabs the next word or number characters and moves cursor to the end of it.
+     * Throws exception if nothing found
+     * 
+     * @return String containing the word or number
+     */
     private String getNext() {
-        trim();
-        int initPos = position;
+        trim(); // Removes whitespaces
+        int initPos = position; // Tracks progress from start
         while (isWord() || isNumber()) {
             position++;
         }
-        if (initPos == position) {
+        if (initPos == position) { // Checks if nothing found
             throw new ParsingException(
                     "Error: Either finding word/number at end of String, or finding word/number on non-word/number char.",
                     line, position);
@@ -469,6 +486,10 @@ public class Parser {
         return line.substring(initPos, position);
     }
 
+    /**
+     * Moves cursor past whitespace characters until end of line or non-whitespace
+     * character
+     */
     private void trim() {
         while (line.length() > position && line.charAt(position) == ' ') {
             position++;
@@ -476,30 +497,49 @@ public class Parser {
         return;
     }
 
+    /**
+     * Checks if the next non-whitespace character is an expected character and
+     * moves cursor past it, throws exception if not
+     * 
+     * @param expected The character which is expected to be read
+     */
     private void eat(char expected) {
-        trim();
-        if (position >= line.length()) {
+        trim(); // Removes whitespaces
+        if (position >= line.length()) { // Throws error if at end of line
             throw new ParsingException("Error: Expected '" + expected + "', found end of string.", line, position);
         }
-        if (expected != line.charAt(position++)) {
+        if (expected != line.charAt(position++)) { // Moves cursor and throws error if not the expected character
             throw new ParsingException("Error: Expected '" + expected + "', found '" + line.charAt(position - 1) + "'.",
                     line, position - 1);
         }
         return;
     }
 
+    /**
+     * Checks if the next non-whitespace character is an expected character and
+     * moves cursor past it. Doesn't move cursor if not
+     * 
+     * @param expected The character which is expected to be read
+     * @return boolean, true if the expected character was found, false otherwise
+     */
     private boolean tryEat(char expected) {
         trim();
-        if (position == line.length()) {
+        if (position >= line.length()) { // Check for end of line
             return false;
         }
         boolean result = expected == line.charAt(position);
-        if (result) {
+        if (result) { // Only move cursor if expected character was found
             position++;
         }
         return result;
     }
 
+    /**
+     * Checks if next word is a given string and moves cursor past it. Throws error
+     * if not
+     * 
+     * @param expected String containing the word expected to be read
+     */
     private void eatWord(String expected) {
         String word = getWord();
         if (!expected.equals(word)) {
@@ -507,55 +547,78 @@ public class Parser {
         }
     }
 
-    private char increment() {
-        trim();
-        if (position >= line.length()) {
-            throw new ParsingException("Error: Expected character.", line, position);
-        }
-        return line.charAt(position++);
-    }
-
+    /**
+     * Checks if next word is a given string and moves cursor past it. Doesn't move
+     * cursor if not
+     * 
+     * @param expected String containing the word expected to be read
+     * @return boolean, true if the expected word was found, false otherwise
+     */
     private boolean tryEatWord(String expected) {
-        trim();
-        int initPos = position;
+        trim(); // Removes whitespaces
+        int initPos = position; // Tracks position from start
         if (!isNumber()) {
             while (isWord()) {
                 position++;
             }
         }
-        if (initPos == position) {
+        if (initPos == position) { // Checks if anything found
             return false;
         }
-        position = initPos;
-        String word = null;
-        try {
-            word = getWord();
-        } catch (ParsingException e) {
-            System.out.println("You done fucked up m8.");
-        }
+        String word = line.substring(initPos, position); 
         boolean result = expected.equals(word);
-        if (!result) {
+        if (!result) { // Moves back to start of word if expected word not found
             position = initPos;
         }
         return result;
     }
+
+    /**
+     * Moves the cursor forward one character. Throws error if at end of string
+     * 
+     * @return char of the character moved past
+     */
+    private char increment() {
+        trim();
+        if (position >= line.length()) {
+            throw new ParsingException("Error: Expected character.", line, position);
+        }
+        return line.charAt(position++); // Increments cursor and grabs character being skipped
+    }
 }
 
+/**
+ * ParsingException
+ * Exception thrown when a Parser method encounters something that the method does not expect or cannot handle
+ * 
+ * @version 1.0
+ */
 class ParsingException extends QueryException {
     String offender;
     int position;
 
+    /**
+     * Constructor
+     * 
+     * @param message The message body to be printed
+     * @param offender The String which was found where it shouldn't have been found
+     * @param position The position in the line where the String was found
+     */
     public ParsingException(String message, String offender, int position) {
         super(message);
         this.offender = offender;
         this.position = position;
     }
 
+    /**
+     * Presents a String detailing this exception
+     * @return String containing the exception message/description
+     */
     public String getMessage() {
-        StringBuilder builder = new StringBuilder(super.getMessage());
-        builder.append("\n" + offender + "\n");
+        StringBuilder builder = new StringBuilder(super.getMessage()); // Uses initial message body
+        builder.append("\n" + offender + "\n"); // Prints the offending String
         String positionString = "";
-        if (position >= 0) {
+        if (position >= 0) { // Prints an arrow pointing at the given position
             positionString = " ".repeat(position) + "^";
         }
         builder.append(positionString);

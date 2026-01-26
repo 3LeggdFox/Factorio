@@ -64,7 +64,7 @@ public class RecipeBrowser {
             HashMap<String, Integer> all_materials = new HashMap<>();
             int line_number = 0;
             while (scanner.hasNextLine()) {
-                Recipe recipe = Parser.parseRecipe(scanner.nextLine(), line_number);
+                Recipe recipe = Parser.parseRecipe(scanner.nextLine());
                 for (Material output : recipe.outputs) {
                     if (all_materials.getOrDefault(output.name, 313) > line_number) {
                         all_materials.put(output.name, line_number);
@@ -511,7 +511,7 @@ public class RecipeBrowser {
             if (resources.containsKey(material.name)) {
                 double current = resources.get(material.name);
                 resources.put(material.name, current + this_amount);
-                all_resources.put(material.name, all_resources.get(material.name) + this_amount);
+                all_resources.put(material.name, all_resources.getOrDefault(material.name, 0.0) + this_amount);
                 if (current <= 0 && current + this_amount > 0) {
                     required_resources.add(material.name);
                 }
@@ -653,23 +653,26 @@ public class RecipeBrowser {
                 System.out.println(recipe);
             }
             allEmpty = false;
-            System.out.println();
         }
         if (!isInput.isEmpty()) {
+            if (!allEmpty) {
+                System.out.println();
+            }
             System.out.println("Item is used in recipes:");
             for (Recipe recipe : isInput) {
                 System.out.println(recipe);
             }
             allEmpty = false;
-            System.out.println();
         }
         if (!isStation.isEmpty()) {
+            if (!allEmpty) {
+                System.out.println();
+            }
             System.out.println("Item serves as station in recipes:");
             for (Recipe recipe : isStation) {
                 System.out.println(recipe);
             }
             allEmpty = false;
-            System.out.println();
         }
         if (allEmpty) {
             System.out.println("This item was not found in any recipes.");

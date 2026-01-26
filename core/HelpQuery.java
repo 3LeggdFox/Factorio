@@ -114,8 +114,8 @@ public class HelpQuery extends Query {
      * Helper function to print details of the 'list' command
      */
     private void printList() {
-        System.out.println("list <material>");
-        System.out.println("    Lists all recipes involving material.");
+        System.out.println("list <material/station>");
+        System.out.println("    Lists all recipes involving material or station.");
         System.out.println("    Using material 'recipes' returns all recipes.");
         System.out.println("    Using material 'settings' returns all settings.");
         System.out.println();

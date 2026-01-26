@@ -2,8 +2,7 @@ package core;
 
 /**
  * ListQuery
- * Class to manage queries regarding listing factory or recipe information for a
- * given object
+ * Class to manage queries regarding listing factory or recipe information
  * 
  * @version 1.0
  */

@@ -47,8 +47,7 @@ public class MathQuery extends Query {
                 result = number1 * number2;
                 break;
             default:
-                System.err.println("Error: Invalid Operator.");
-                return;
+                throw new QueryException("Error: Invalid Operator.");
         }
         System.out.println(String.format("%.3f", result));
     }
