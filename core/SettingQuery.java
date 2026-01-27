@@ -9,7 +9,7 @@ public class SettingQuery extends Query {
     }
 
     public void query(RecipeBrowser browser) {
-        if (browser.settings.containsKey(topic)) {
+        if (browser.settings.has(topic)) {
             System.out.println(browser.settings.get(topic));
         } else {
             System.out.println("Setting not found.");

@@ -253,10 +253,11 @@ public class Recipe {
     }
 
     /**
-     * Gets the recipe with the given station and adds the total productivity % and
-     * crafting time
+     * Gets the recipe with the given station and adds the total productivity %,
+     * crafting time and amount of each input
      * 
      * @param station        Station being used
+     * @param times          Number of times the recipe is being completed
      * @param prod_mod_level Level of productivity module being applied (if
      *                       possible)
      * @return String containing simple version of the recipe using a specific

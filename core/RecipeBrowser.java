@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Scanner;
 
 import java.util.HashMap;
@@ -24,7 +22,7 @@ public class RecipeBrowser {
     static final String TEMPLATE_FOLDER = CORE_FOLDER + "factoryTemplates/";
 
     ArrayList<Recipe> recipes;
-    HashMap<String, Setting> settings;
+    Settings settings;
     String factory;
     Scanner stdin;
     HashMap<String, Station> stations;
@@ -35,11 +33,12 @@ public class RecipeBrowser {
     Recipe heavy_crack_recipe;
     Recipe light_crack_recipe;
 
-    public RecipeBrowser(ArrayList<Recipe> recipes, HashMap<String, Setting> settings,
+    public RecipeBrowser(ArrayList<Recipe> recipes, Settings settings,
             HashMap<String, Station> stations, String factory, HashMap<String, Integer> all_materials,
             HashSet<String> base_ingredients, Scanner scanner) {
         this.recipes = recipes;
         this.settings = settings;
+        this.settings.addBrowser(this);
         this.stations = stations;
         this.factory = factory;
         this.all_materials = all_materials;
@@ -96,10 +95,10 @@ public class RecipeBrowser {
 
             file = new File(FACTORY_FOLDER + factory);
             scanner = new Scanner(file);
-            HashMap<String, Setting> settings = new HashMap<String, Setting>();
+            Settings settings = new Settings();
             while (scanner.hasNextLine()) {
                 Setting setting = Parser.parseSettings(scanner.nextLine());
-                settings.put(setting.topic, setting);
+                settings.add(setting);
             }
             scanner.close();
 
@@ -129,10 +128,10 @@ public class RecipeBrowser {
     public void newFactory(String new_factory) {
         File file = new File(FACTORY_FOLDER + new_factory);
         try (Scanner scanner = new Scanner(file)) {
-            HashMap<String, Setting> new_settings = new HashMap<String, Setting>();
+            Settings new_settings = new Settings();
             while (scanner.hasNextLine()) {
                 Setting setting = Parser.parseSettings(scanner.nextLine());
-                new_settings.put(setting.topic, setting);
+                new_settings.add(setting);
             }
             scanner.close();
             this.settings = new_settings;
@@ -278,7 +277,7 @@ public class RecipeBrowser {
         return userIn;
     }
 
-    private String hasStation(String station) {
+    private String userHaveStation(String station) {
         System.out.println("Does this factory use " + station + "?");
         System.out.println("0: No.");
         System.out.println("1: Yes.");
@@ -286,15 +285,6 @@ public class RecipeBrowser {
             return "yes";
         }
         return "no";
-    }
-
-    private int moduleLevel(String moduleType) {
-        System.out.println("What level of " + moduleType + " module does this factory have?");
-        System.out.println("0: None.");
-        System.out.println("1: Level 1.");
-        System.out.println("2: Level 2.");
-        System.out.println("3: Level 3.");
-        return getUserInt(0, 3);
     }
 
     public void listQuery(String item) {
@@ -305,11 +295,7 @@ public class RecipeBrowser {
             return;
         }
         if (item.equals("settings")) {
-            ArrayList<Setting> sorted = new ArrayList<>(settings.values());
-            Collections.sort(sorted, Comparator.comparing(Setting::getTopic));
-            for (Setting setting : sorted) {
-                System.out.println(setting);
-            }
+            System.out.println(settings);
             return;
         }
         ArrayList<Recipe> isInput = new ArrayList<Recipe>();
@@ -384,7 +370,7 @@ public class RecipeBrowser {
         if (setting == null) {
             String alt_name = userChooseRecipe(recipe_options, material);
             setting = new Setting(material, alt_name);
-            addNewSetting(setting);
+            settings.updateSetting(setting);
         }
         if (setting.value.equals("basic")) {
             return null;
@@ -399,7 +385,7 @@ public class RecipeBrowser {
     }
 
     private String getRecipeOrEmpty(String setting_name) {
-        if (settings.containsKey(setting_name)) {
+        if (settings.has(setting_name)) {
             return settings.get(setting_name).value;
         }
         return "";
@@ -413,8 +399,8 @@ public class RecipeBrowser {
         for (String station_name : allowedStations) {
             Setting setting = settings.get(station_name);
             if (setting == null) {
-                setting = new Setting(station_name, hasStation(station_name));
-                addNewSetting(setting);
+                setting = new Setting(station_name, userHaveStation(station_name));
+                settings.updateSetting(setting);
             }
             if (setting.value.equals("yes")) {
                 Station search_station = stations.get(station_name);
@@ -435,16 +421,6 @@ public class RecipeBrowser {
         return station;
     }
 
-    public double getProd(Station station, int prod_mod_level) {
-        String moduleString = "prodModLevel";
-        Setting moduleSetting = settings.get(moduleString);
-        if (moduleSetting == null) {
-            moduleSetting = new Setting(moduleString, Integer.toString(moduleLevel("production")));
-            addNewSetting(moduleSetting);
-        }
-        return station.getProd(Integer.parseInt(moduleSetting.value));
-    }
-
     public void query(String line) {
         Query query = Parser.parseQuery(line, toggle_verbose);
         query.query(this);
@@ -452,11 +428,11 @@ public class RecipeBrowser {
 
     public void initCheckCycle() {
         if (checkCycle()) {
-            addNewSetting(new Setting("water", "basic"));
-            addNewSetting(new Setting("coal", "basic"));
-            addNewSetting(new Setting("metallic_chunk", "basic"));
-            addNewSetting(new Setting("carbonic_chunk", "basic"));
-            addNewSetting(new Setting("oxide_chunk", "basic"));
+            settings.updateSetting(new Setting("water", "basic"));
+            settings.updateSetting(new Setting("coal", "basic"));
+            settings.updateSetting(new Setting("metallic_chunk", "basic"));
+            settings.updateSetting(new Setting("carbonic_chunk", "basic"));
+            settings.updateSetting(new Setting("oxide_chunk", "basic"));
         }
     }
 
@@ -501,31 +477,8 @@ public class RecipeBrowser {
         return cycle;
     }
 
-    private void addNewSetting(Setting setting) {
-        addNewSetting(setting, true);
-    }
-
-    private void addNewSetting(Setting setting, boolean check_cycle) {
-        Setting initial = settings.get(setting.topic);
-        settings.put(setting.topic, setting);
-        if (check_cycle) {
-            if (checkCycle()) {
-                settings.put(setting.topic, initial);
-                throw new CycleException(setting.topic);
-            }
-        }
-        try (FileWriter writer = new FileWriter(FACTORY_FOLDER + factory, true)) {
-            writer.write("\n");
-            writer.write(setting.toString());
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
-
     public void updateSetting(String setting_name) {
-        boolean setting_is_new = !settings.containsKey(setting_name);
+        boolean setting_is_new = !settings.has(setting_name);
         String old_value = "ERROR";
         if (!setting_is_new) {
             old_value = settings.get(setting_name).value;
@@ -534,19 +487,11 @@ public class RecipeBrowser {
         if (all_materials.containsKey(setting_name)) {
             ArrayList<Recipe> possible_recipes = findRecipes(setting_name);
             new_setting = new Setting(setting_name, userChooseRecipe(possible_recipes, setting_name));
-            if (!setting_is_new) {
-                changeSetting(new_setting);
-            } else {
-                addNewSetting(new_setting);
-            }
+            settings.updateSetting(new_setting);
         } else if (stations.containsKey(setting_name)) {
             Station station = stations.get(setting_name);
-            new_setting = new Setting(setting_name, hasStation(station.name));
-            if (!setting_is_new) {
-                changeSetting(new_setting);
-            } else {
-                addNewSetting(new_setting);
-            }
+            new_setting = new Setting(setting_name, userHaveStation(station.name));
+            settings.updateSetting(new_setting);
         } else {
             System.err.println("Error: No possible setting fits the name '" + setting_name + "'.");
             return;
@@ -558,30 +503,6 @@ public class RecipeBrowser {
             System.out.println(
                     "Setting '" + setting_name + "' was updated from '" + old_value + "' to '" + new_setting.value
                             + "'.");
-        }
-    }
-
-    public void changeSetting(Setting setting) {
-        Setting old_setting = settings.get(setting.topic);
-        settings.put(setting.topic, setting);
-        if (checkCycle()) {
-            settings.put(setting.topic, old_setting);
-            throw new CycleException(setting.topic);
-        }
-        try (FileWriter writer = new FileWriter(FACTORY_FOLDER + factory)) {
-            boolean first = true;
-            for (Setting set : settings.values()) {
-                if (!first) {
-                    writer.write("\n");
-                } else {
-                    first = false;
-                }
-                writer.write(set.toString());
-            }
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
         }
     }
 }
