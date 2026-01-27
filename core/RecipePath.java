@@ -61,7 +61,7 @@ public class RecipePath {
                 first = false;
             }
             Station station = browser.pickStation(recipe);
-            System.out.println(recipe.toStringSpecificVerbose(station, prod_mod_level));
+            System.out.println(recipe.toStringSpecificVerbose(station, steps.get(recipe), prod_mod_level));
         }
         System.out.println();
     }
@@ -98,10 +98,12 @@ public class RecipePath {
             }
             Station station = browser.pickStation(recipe);
             double crafting_time = recipe.getCraftingTime(station, prod_mod_level);
-            double machines = steps.get(recipe) * crafting_time;
+            double recipe_completions = steps.get(recipe);
+            double machines = recipe_completions * crafting_time;
             if (verbose) {
-                String station_string = recipe.toStringSpecificVerbose(station, prod_mod_level);
-                System.out.println(String.format("%s\nNeed: %.3f %ss", station_string, machines, station.name));
+                StringBuilder input_string = new StringBuilder();
+                String station_string = recipe.toStringSpecificVerbose(station, recipe_completions, prod_mod_level);
+                System.out.println(String.format("%s\nInput: %s\nNeed: %.3f %ss", station_string, input_string.toString(), machines, station.name));
             } else {
                 machines = Math.ceil(machines);
                 System.out.println(String.format("Using Recipe: %s\nNeed: %.0f %ss", recipe.toStringSpecific(station),

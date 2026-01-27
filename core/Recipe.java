@@ -141,6 +141,17 @@ public class Recipe {
     }
 
     /**
+     * Grabs a list of all ingredients and products involved in the Recipe
+     * 
+     * @return ArrayList of Materials involved in the Recipe
+     */
+    public ArrayList<Material> getMaterials() {
+        ArrayList<Material> inputs_copy = new ArrayList<>(inputs);
+        inputs_copy.addAll(outputs);
+        return inputs_copy;
+    }
+
+    /**
      * Generates a String representation of the Recipe
      * 
      * @returns String representation of the Recipe
@@ -251,7 +262,7 @@ public class Recipe {
      * @return String containing simple version of the recipe using a specific
      *         Station and the productivity % and crafting speed
      */
-    public String toStringSpecificVerbose(Station station, int prod_mod_level) {
+    public String toStringSpecificVerbose(Station station, double times, int prod_mod_level) {
         StringBuilder string = new StringBuilder("Using Recipe: ");
         string.append(toStringSpecific(station)); // Append inputs, outputs, crafting speed and Station
         int percentage;
@@ -263,6 +274,18 @@ public class Recipe {
         string.append("\nProductivity: " + percentage + "%");
         double craft_speed = station.getSpeed(prod_mod_level);
         string.append(String.format(", Crafting Speed: %.3f.", craft_speed));
+        boolean first_ingredient = true;
+        if (times != 0) {
+            for (Material material : inputs) {
+                if (!first_ingredient) {
+                    string.append(", ");
+                } else {
+                    string.append("\nInputs: ");
+                    first_ingredient = false;
+                }
+                string.append(String.format("%.3f %s", material.quantity * times, material.name));
+            }
+        }
         return string.toString();
     }
 
