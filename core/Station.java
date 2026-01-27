@@ -19,6 +19,13 @@ public class Station {
         this.priority = priority;
     }
 
+    public double getProductivity(Recipe recipe, int prod_mod_level) {
+        if (recipe.can_prod) {
+            return getProd(prod_mod_level);
+        }
+        return getProd(0);
+    }
+
     public double getProd(int prod_mod_level) {
         int[] percentages = { 0, 4, 6, 10 };
         int percentage = percentages[prod_mod_level] * modules;

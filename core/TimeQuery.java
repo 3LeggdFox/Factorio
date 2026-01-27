@@ -20,8 +20,7 @@ public class TimeQuery extends Query {
         Recipe recipe = browser.pickRecipe(material);
         if (recipe == null)
         {
-            System.err.println("Error: '" + material + "' has no crafting recipe.");
-            return;
+            throw new QueryException("Error: '" + material + "' has no crafting recipe.");
         }
         Station station = browser.pickStation(recipe);
         double crafting_time = recipe.getCraftingTime(station, prod_mod_level);

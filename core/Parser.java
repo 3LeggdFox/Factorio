@@ -441,10 +441,10 @@ public class Parser {
 
     /**
      * Tries to grab the next double/int in the line and move cursor to the end of
-     * it. Does not throw exception or move cursorif no double/int is found
+     * it. Does not throw exception or move cursor if no double/int is found
      * 
      * @param int_only boolean controlling whether decimal point is accepted/read
-     * @return Double of the next non-whitespaaces in the line, null if no numbers
+     * @return Double of the next non-whitespaces in the line, null if no numbers
      *         found
      */
     private Double tryGetNumber(boolean int_only) {
