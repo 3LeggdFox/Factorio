@@ -241,8 +241,8 @@ public class Parser {
                 parser.checkExcess();
                 return new SettingQuery(topic, verbose);
             case "time": // [verbose] time for <material> [prod <prod_mod_level>]
-                material = parser.getWord();
                 parser.eatWord("for");
+                material = parser.getWord();
                 prod_mod_level = 0;
                 if (parser.tryEatWord("prod")) { // Default to prod_mod_level = 0
                     prod_mod_level = (int) (parser.getNumber(true) + 0.5); // +0.5 to avoid fp inaccuracy rounding down

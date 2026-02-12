@@ -12,6 +12,8 @@ public class RecipePath {
     RecipeBrowser browser;
     int prod_mod_level;
 
+    final double EPSILON = 0.00000000000001;
+
     enum CompleteType {
         ADD,
         CLEAR,
@@ -101,9 +103,8 @@ public class RecipePath {
             double recipe_completions = steps.get(recipe);
             double machines = recipe_completions * crafting_time;
             if (verbose) {
-                StringBuilder input_string = new StringBuilder();
                 String station_string = recipe.toStringSpecificVerbose(station, recipe_completions, prod_mod_level);
-                System.out.println(String.format("%s\nInput: %s\nNeed: %.3f %ss", station_string, input_string.toString(), machines, station.name));
+                System.out.println(String.format("%s\nNeed: %.3f %ss", station_string, machines, station.name));
             } else {
                 machines = Math.ceil(machines);
                 System.out.println(String.format("Using Recipe: %s\nNeed: %.0f %ss", recipe.toStringSpecific(station),
@@ -160,10 +161,10 @@ public class RecipePath {
             }
         }
         for (Material output : recipe.outputs) {
-            double amount = output.quantity * times * productivity;
-            double current_resource = resources.getOrDefault(output.name, 0.0);
+            Double amount = output.quantity * times * productivity;
+            Double current_resource = resources.getOrDefault(output.name, 0.0);
             resources.put(output.name, current_resource - amount);
-            if (complete_type == CompleteType.ADD && current_resource - amount <= 0) {
+            if (complete_type.equals(CompleteType.ADD) && current_resource - amount <= EPSILON) {
                 required_resources.remove(output.name);
             }
         }
