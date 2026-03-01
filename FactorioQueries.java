@@ -6,6 +6,7 @@ public class FactorioQueries {
         Scanner stdIn = new Scanner(System.in);
         RecipeBrowser recipes = RecipeBrowser.initialiseBrowser(stdIn);
         while (true) {
+            System.out.println("===============================================================");
             System.out.print("Command: ");
             try {
                 String nextLine = stdIn.nextLine();
