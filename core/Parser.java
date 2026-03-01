@@ -104,14 +104,14 @@ public class Parser {
                     stations.add(parser.getWord());
                 } while (parser.tryEat(',')); // Collect all required stations
             }
+        }
 
-            // Check if can use productivity modules
-            if (parser.tryEat('.')) {
-                parser.eatWord("Uses");
-                parser.eatWord("productivity");
-                parser.eatWord("modules");
-                can_prod = true;
-            }
+        // Check if can use productivity modules
+        if (parser.tryEat('.')) {
+            parser.eatWord("Uses");
+            parser.eatWord("productivity");
+            parser.eatWord("modules");
+            can_prod = true;
         }
 
         if (!has_req) { // Adds the assembly machines as a default
@@ -232,6 +232,20 @@ public class Parser {
                 }
                 parser.checkExcess();
                 return new MachinesQuery(output, number, prod_mod_level, verbose);
+            case "consume":
+                number = parser.tryGetNumber();
+                if (number == null) { // Default to amount = 1
+                    number = 1.0;
+                }
+                input = parser.getWord();
+                parser.eatWord("for");
+                output = parser.getWord();
+                prod_mod_level = 0;
+                if (parser.tryEatWord("prod")) { // Default to prod_mod_level = 0
+                    prod_mod_level = (int) (parser.getNumber(true) + 0.5); // +0.5 to avoid fp inaccuracy rounding down
+                }
+                parser.checkExcess();
+                return new ConsumeQuery(number, input, output, prod_mod_level, verbose);
             case "list": // list <material>[/settings]
                 material = parser.getWord();
                 parser.checkExcess();
@@ -565,7 +579,7 @@ public class Parser {
         if (initPos == position) { // Checks if anything found
             return false;
         }
-        String word = line.substring(initPos, position); 
+        String word = line.substring(initPos, position);
         boolean result = expected.equals(word);
         if (!result) { // Moves back to start of word if expected word not found
             position = initPos;
@@ -589,7 +603,8 @@ public class Parser {
 
 /**
  * ParsingException
- * Exception thrown when a Parser method encounters something that the method does not expect or cannot handle
+ * Exception thrown when a Parser method encounters something that the method
+ * does not expect or cannot handle
  * 
  * @version 1.0
  */
@@ -600,7 +615,7 @@ class ParsingException extends QueryException {
     /**
      * Constructor
      * 
-     * @param message The message body to be printed
+     * @param message  The message body to be printed
      * @param offender The String which was found where it shouldn't have been found
      * @param position The position in the line where the String was found
      */
@@ -612,6 +627,7 @@ class ParsingException extends QueryException {
 
     /**
      * Presents a String detailing this exception
+     * 
      * @return String containing the exception message/description
      */
     public String getMessage() {

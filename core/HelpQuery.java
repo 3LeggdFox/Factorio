@@ -36,6 +36,9 @@ public class HelpQuery extends Query {
             case "machines":
                 printMachines();
                 break;
+            case "consume":
+                printConsume();
+                break;
             case "list":
                 printList();
                 break;
@@ -72,6 +75,7 @@ public class HelpQuery extends Query {
                 System.out.println();
                 printGet();
                 printMachines();
+                printConsume();
                 printList();
                 printSetting();
                 printTime();
@@ -106,6 +110,18 @@ public class HelpQuery extends Query {
         System.out.println(
                 "    Returns the minimum number of machines needed to achieve\n    quantity (defaults to 1) material per second.");
         System.out.println("    Prints the recipes used and shows decimal places for machine number if verbose.");
+        System.out.println("    Uses productivity modules if prod <integer> is included.");
+        System.out.println();
+    }
+
+    /**
+     * Helper function to print details of the 'consume' command
+     */
+    private void printConsume() {
+        System.out.println("[verbose] consume [<quantity>] <input_material> for <output_material> [prod <productivity_module_level>]");
+        System.out.println(
+                "    Returns the amount of output made by consuming all of the input.");
+        System.out.println("    Prints the machines needed to make the calculated amount of output if verbose");
         System.out.println("    Uses productivity modules if prod <integer> is included.");
         System.out.println();
     }

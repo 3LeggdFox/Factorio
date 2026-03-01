@@ -268,6 +268,9 @@ public class RecipePath {
         Recipe heavy_recipe = browser.heavy_crack_recipe;
         Station heavy_station = browser.pickStation(heavy_recipe);
         double heavy_prod = heavy_station.getProductivity(heavy_recipe, prod_mod_level);
+        if (recipe.has_cycle) {
+            recipe = recipe.getNoCycleClone();
+        }
         for (Material material : recipe.outputs) {
             double this_amount = material.quantity * productivity;
             if (material.name.equals("petrol")) {
